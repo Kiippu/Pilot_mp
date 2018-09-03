@@ -27,6 +27,7 @@ public:
 
 	// Check if the obstacle intersects the given line segment.
 	bool collides (double xa, double ya, double xb, double yb);
+
 };
 
 class Room : public Model
@@ -59,6 +60,12 @@ public:
 
 	// Add an actor to the game. 
 	void addActor (Actor * actor);
+
+	// Serialise the data
+	char * serialize(int code, int & size);
+
+	// deserialize the environment from a block.
+	void deserialize(char * data, int size);
 
 	// Retrieve the list of actors.
 	const std::vector <Actor *> getActors ();

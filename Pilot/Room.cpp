@@ -206,6 +206,51 @@ void Room::addActor (Actor * actor)
 	actors.push_back (actor);
 }
 
+char * Room::serialize(int code, int & size)
+{
+	/* EXAMPLE FROM BATTLEMULTI.sln
+	// used to turn game datain to bytes and send as packets
+	
+	int elementsize = sizeof(double) + sizeof(int) + sizeof(double);
+	size = sizeof(int) + sx * sy * elementsize;
+
+	char * data = new char[size];
+	*(int *)data = code;
+	for (int x = 0; x < sx; x++)
+	{
+	for (int y = 0; y < sy; y++)
+	{
+	(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize)) = (*environment[y * sx + x]).content;
+	(*(int*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double))) = (*environment[y * sx + x]).owner;
+	(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double) + sizeof(int))) = (*environment[y * sx + x]).production;
+	}
+	}
+	return data;
+
+	*/
+	char * data = new char[size];
+	return data;
+}
+
+void Room::deserialize(char * data, int size)
+{
+	/* EXAMPLE FROM MULTIBATTLE.sln
+	// used to take client data annd turn it into server side information
+	
+	int elementsize = sizeof(double) + sizeof(int) + sizeof(double);
+	for (int x = 0; x < sx; x++)
+	{
+		for (int y = 0; y < sy; y++)
+		{
+			(*environment[y * sx + x]).content = (*(double*)(data + sizeof(int) + (y * sx + x) * elementsize));
+			(*environment[y * sx + x]).owner = (*(int*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double)));
+			(*environment[y * sx + x]).production = (*(double*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double) + sizeof(int)));
+		}
+	}
+	
+	*/
+}
+
 const std::vector <Actor *> Room::getActors ()
 
 {
