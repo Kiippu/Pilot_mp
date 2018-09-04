@@ -10,6 +10,7 @@
 #include "Server.h"
 #include "Timer.h"
 #include "Room.h"
+#include "networkEnums.h"
 
 
 void Server::InitServer(unsigned short port, char * ipAddress)
@@ -110,14 +111,6 @@ void Server::InitServer(unsigned short port, char * ipAddress)
 			{
 			case ALIVE:
 			{	
-			}
-			break;
-			case ADDLINK:
-			{
-			}
-			break;
-			case REMOVELINKS:
-			{
 			}
 			break;
 			default:

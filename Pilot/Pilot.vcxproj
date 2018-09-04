@@ -151,6 +151,7 @@
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="networkEnums.h" />
     <ClInclude Include="QuickDraw.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="Server.h" />

@@ -1,0 +1,5 @@
+
+enum MESSAGECODES { 
+	ALIVE,
+	WORLDUPDATE 
+};

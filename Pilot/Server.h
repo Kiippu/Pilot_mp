@@ -8,9 +8,6 @@
 
 
 
-/// Server Messages
-enum MESSAGECODES { ALIVE, ADDLINK, REMOVELINKS, WORLDUPDATE };
-
 struct ClientAddr
 {
 	int ip;
