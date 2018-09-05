@@ -13,9 +13,9 @@
 #include "networkEnums.h"
 
 
-void Server::InitServer(unsigned short port, char * ipAddress)
+void Server::InitServer(char * ipAddress)
 {
-	m_portNum = port;
+	m_portNum = 33303;
 	if (ipAddress != nullptr)
 	{
 		m_ipAddress = ipAddress;

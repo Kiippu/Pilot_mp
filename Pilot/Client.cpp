@@ -15,15 +15,6 @@
 #include "networkEnums.h"
 #include "Ship.h"
 
-// message objects.All must have a message code as the first integer and playerID as the second.
-class Alive
-{
-public:
-	int action;
-	int player;
-
-	Alive(int p) : action(ALIVE), player(p) {}
-};
 
 const int gamePort = 33303;
 

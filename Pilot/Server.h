@@ -2,8 +2,6 @@
 #ifndef SERVER_SINGLE
 #define SERVER_SINGLE
 
-#pragma comment(lib, "ws2_32.lib")
-
 #include <vector>
 
 
@@ -43,7 +41,7 @@ public:
 	void operator=(Server const&) = delete;
 
 	/// Class Methods
-	void InitServer(unsigned short port, char* ipAddress);
+	void InitServer(char* ipAddress = nullptr);
 
 
 
