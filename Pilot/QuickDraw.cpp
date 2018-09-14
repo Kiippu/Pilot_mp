@@ -1,5 +1,4 @@
 #include "stdafx.h"
-
 #include "QuickDraw.h"
 
 #include <iostream>
@@ -32,9 +31,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_KEYDOWN:
 		currentQD->keypress = wParam;
+		currentQD->SetKeyDown(wParam);
+
 		break;
 	case WM_KEYUP:
 		currentQD->keypress = 0;
+		currentQD->SetKeyUp(wParam);
+
 		break;
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
@@ -116,6 +119,9 @@ void WindowProc (void * obj)
 QuickDraw::QuickDraw(void)
 {
 	currentQD = this;
+	
+	memset(&m_keyboard, false, sizeof(bool)*NUM_KEYS);
+	memset(&m_mouse, false, sizeof(bool)*NUM_MOUSE_BUTTONS);
 
 	_beginthread (WindowProc, 0, this);
 
@@ -128,6 +134,24 @@ QuickDraw::QuickDraw(void)
 
 QuickDraw::~QuickDraw(void)
 {
+}
+
+void QuickDraw::SetKeyDown(char ch)
+{
+	//std::unique_lock<std::mutex>	locked(m_key_lock);
+	m_keyboard[ch] = true;
+}
+
+void QuickDraw::SetKeyUp(char ch)
+{
+	//std::unique_lock<std::mutex>	locked(m_key_lock);
+	m_keyboard[ch] = false;
+}
+
+bool QuickDraw::isActive(char ch)
+{
+	//std::unique_lock<std::mutex>	locked(m_key_lock);
+	return m_keyboard[ch];
 }
 
 void QuickDraw::clearScreen (int r, int g, int b)
@@ -207,9 +231,12 @@ void QuickDraw::drawText (int x1, int y1, std::string message, int r, int g, int
 	rect.top = y1;
 	rect.bottom = y1 + 100;
 
+	SetRect(&rect, x1, y1, x1+100, y1+100);
+	SetTextColor(hdcFront, RGB(r, g, b));
+
 	std::wstring ws;
 	ws.assign (message.begin (), message.end ());
-	DrawText (hdcFront, ws.c_str (), -1, &rect, DT_LEFT | DT_TOP);
+	DrawText (hdcFront, ws.c_str (), -1, &rect, DT_LEFT | DT_TOP | DT_NOCLIP);
 
 	DeleteObject(NewPen);
 	DeleteObject(NewBrush);

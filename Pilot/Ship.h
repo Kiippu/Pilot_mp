@@ -38,29 +38,29 @@ private:
 public:
 	enum ActorTypes { INPLAY, AUTO, RECOVERY };
 
-	Ship (Controller & cntrller, int initmode, std::string name);
+	Ship(Controller & cntrller, int initmode, std::string name);
 	virtual ~Ship(void);
 
 	// Read input and update state accordingly.
-	virtual bool update (Model & model, double deltat);
+	virtual bool update(Model & model, double deltat);
 
 	// Show the Ship.
-	virtual void display (View & view, double offsetx, double offsety, double scale);
+	virtual void display(View & view, double offsetx, double offsety, double scale);
 
 	// Switch to killed state.
-	void triggerKill ();
+	void triggerKill();
 
 	// simple control routine.
-	void doAI (Model & model, double & controlthrust, double & controlleft, double & controlright, double & controlfire);
+	void doAI(Model & model, double & controlthrust, double & controlleft, double & controlright, double & controlfire);
 
 	// return current score
-	double getScore ();
+	double getScore();
 
 	// register a hit of one of our bullets on another ship.
-	void addHit ();
+	void addHit();
 
 	// returns true if the ship is allowed to be shot.
-	bool isFairGame ();
+	bool isFairGame();
 };
 
 #endif // __PILOT_SHIP
