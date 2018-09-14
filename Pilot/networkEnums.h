@@ -1,4 +1,7 @@
 
+//Forward declaration of classes
+class Ship;
+
 enum MESSAGECODES { 
 	ALIVE,
 	WORLDUPDATE,
@@ -55,9 +58,10 @@ class PlayerStats
 public:
 	int action;
 	int player;
+	Ship PlayerRef;
 	// add extra stats
 
-	PlayerStats(int p) : action(PLAYER_STATS), player(p) {}
+	PlayerStats(int p, Ship ref) : action(PLAYER_STATS), player(p), PlayerRef(ref) {}
 };
 
 // A player update to the server:  player state

@@ -9,6 +9,7 @@ class Room;
 
 #include "QuickDraw.h"
 #include "Actor.h"
+#include "networkEnums.h"
 
 // A room is a box with a number of obstacles.
 class Obstacle
@@ -62,7 +63,7 @@ public:
 	void addActor (Actor * actor);
 
 	// Serialise the data
-	char * serialize(int code, int & size);
+	char * serialize(int code, int & size, MESSAGECODES msgType);
 
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);
