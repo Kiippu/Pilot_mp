@@ -51,7 +51,7 @@ void Server::InitServer(char * ipAddress)
 
 	/// Game enviroment
 
-	Room model(-400, 400, 100, -500);
+	
 
 	while (true)
 	{
@@ -68,7 +68,7 @@ void Server::InitServer(char * ipAddress)
 		lasttime = lasttime + deltat;
 
 		// Update the model - the representation of the game environment.
-		model.update(deltat);
+		model->update(deltat);
 
 		struct sockaddr_in aClientsAddress; // connector's address information
 		int addr_len = sizeof(struct sockaddr);
@@ -105,20 +105,9 @@ void Server::InitServer(char * ipAddress)
 				inet_ntop(AF_INET, &(aClientsAddress.sin_addr), their_source_addr, sizeof(their_source_addr));
 				std::cout << "Adding client: " << their_source_addr << " " << ntohs(aClientsAddress.sin_port) << "\n";
 			}
+			
+			deserialize(buf,n);
 
-			// Process any player to server messages.
-			switch (*(int *)buf) // First int of each packet is the message code.
-			{
-			case ALIVE:
-			{	
-			}
-			break;
-			default:
-			{
-				//				cout << "Unknown message code: " << * (int *) buf << "\n";
-			}
-			break;
-			}
 		}
 
 		// Server to player - send environment updates. Very clunky - try to do better.
@@ -128,7 +117,7 @@ void Server::InitServer(char * ipAddress)
 			int addr = m_clientList[i].ip;
 			int port = m_clientList[i].port;
 			int modelsize;
-			char * modeldata = model.serialize(WORLDUPDATE, modelsize);
+			char * modeldata = serialize(WORLDUPDATE, modelsize);
 			struct sockaddr_in dest_addr;
 			dest_addr.sin_family = AF_INET;
 			dest_addr.sin_addr.s_addr = addr;
@@ -148,5 +137,112 @@ void Server::InitServer(char * ipAddress)
 		std::cout << "Server run: " << deltat << "             \r";
 		//cout << "Server running: " << deltat << "\n";
 	}
+}
+
+
+char * Server::serialize(int code, int & size)
+{
+	//EXAMPLE FROM BATTLEMULTI.sln
+	//// used to turn game datain to bytes and send as packets
+	//
+	//int elementsize = sizeof(double) + sizeof(int) + sizeof(double);
+	//size = sizeof(int) + sx * sy * elementsize;
+
+	//char * data = new char[size];
+	//*(int *)data = code;
+	//for (int x = 0; x < sx; x++)
+	//{
+	//	for (int y = 0; y < sy; y++)
+	//	{
+	//		(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize)) = (*environment[y * sx + x]).content;
+	//		(*(int*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double))) = (*environment[y * sx + x]).owner;
+	//		(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double) + sizeof(int))) = (*environment[y * sx + x]).production;
+	//	}
+	//}
+	//return data;
+
+	////
+
+	int elementSize = -1;
+	char * data;
+
+	switch (code)
+	{
+	case ALIVE:
+		data = new char[1];
+		break;
+	case WORLDUPDATE:
+		size = sizeof(MESSAGECODES); //+elementsize;
+		data = new char[size];
+		*(int *)data = code;
+
+		break;
+	case KILL:
+		data = new char[1];
+		break;
+	case REVIVE:
+		data = new char[1];
+		break;
+		//case PLAYER_STATS:
+		//	// make size of element here
+		//	elementSize = sizeof(int) + sizeof(int) + sizeof(Ship);
+		//	size = sizeof(MESSAGECODES); + elementSize;
+
+		//	PlayerStats bill();
+
+		//	data = new char[size];
+		//	*(int *)data = code;
+		//	(*(int*)(data + sizeof(int))) = (*environment[y * sx + x]).owner;
+		//	//*(int *)data + sizeof(msgType) = code;
+
+		//	break;
+	case POSITION_BULLET:
+		data = new char[1];
+		break;
+	default:
+		data = new char[1];
+		break;
+	}
+
+	return data;
+}
+
+void Server::deserialize(char * data, int size)
+{
+
+	MESSAGECODES msgType = (*(MESSAGECODES*)(data));
+	int elementSize = -1;
+
+	switch (msgType)
+	{
+	case ALIVE:
+		std::cout << " MESSAGE: ALIVE" << std::endl;
+		break;
+	case WORLDUPDATE:
+		std::cout << " MESSAGE: WORLDUPDATE" << std::endl;
+		break;
+	case KILL:
+		std::cout << " MESSAGE: KILL" << std::endl;
+		break;
+	case REVIVE:
+		std::cout << " MESSAGE: REVIVE" << std::endl;
+		break;
+	case PLAYER_STATS:
+		std::cout << " MESSAGE: PLAYER_STATS" << std::endl;
+
+		elementSize = sizeof(PlayerStats);
+
+
+
+		break;
+	case POSITION_BULLET:
+		std::cout << " MESSAGE: POSITION_BULLET" << std::endl;
+		break;
+	default:
+		std::cout << " MESSAGE: DEFAULT = " << std::to_string(msgType) << std::endl;
+		break;
+	}
+
+
 }
 

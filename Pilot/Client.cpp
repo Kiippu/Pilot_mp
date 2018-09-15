@@ -139,6 +139,10 @@ void Client::Initclient(char * serverIP, char * clientID)
 			}
 		}
 
+		PlayerStats stats(player, ship);
+		sendto(m_socket_d, (const char *)&stats, sizeof(stats), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+
+
 		// Check for updates from the server.
 		int addr_len = sizeof(struct sockaddr);
 		char buf[50000];
@@ -156,12 +160,8 @@ void Client::Initclient(char * serverIP, char * clientID)
 		}
 		else
 		{
-			std::cout << "Received world dump: " << n << "\n";
-			if (*(int *)buf == WORLDUPDATE)
-			{
-				/// get incomming data and sendit to the clients enviroment
-				model.deserialize(buf, n);
-			}
+			/// get incomming data and sendit to the clients enviroment
+			deserialize(buf, n);
 		}
 
 		// Schedule a screen update event.
@@ -190,3 +190,106 @@ void Client::Initclient(char * serverIP, char * clientID)
 }
 
 
+
+char * Client::serialize(int code, int & size)
+{
+	//EXAMPLE FROM BATTLEMULTI.sln
+	//// used to turn game datain to bytes and send as packets
+	//
+	//int elementsize = sizeof(double) + sizeof(int) + sizeof(double);
+	//size = sizeof(int) + sx * sy * elementsize;
+
+	//char * data = new char[size];
+	//*(int *)data = code;
+	//for (int x = 0; x < sx; x++)
+	//{
+	//	for (int y = 0; y < sy; y++)
+	//	{
+	//		(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize)) = (*environment[y * sx + x]).content;
+	//		(*(int*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double))) = (*environment[y * sx + x]).owner;
+	//		(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double) + sizeof(int))) = (*environment[y * sx + x]).production;
+	//	}
+	//}
+	//return data;
+
+	////
+
+	int elementSize = -1;
+	char * data;
+
+	switch (code)
+	{
+	case ALIVE:
+		data = new char[1];
+		break;
+	case WORLDUPDATE:
+		size = sizeof(MESSAGECODES); //+elementsize;
+		data = new char[size];
+		*(int *)data = code;
+		std::cout << "WORLD UPDATE!!!" << std::endl;
+
+		break;
+	case KILL:
+		data = new char[1];
+		break;
+	case REVIVE:
+		data = new char[1];
+		break;
+		//case PLAYER_STATS:
+		//	// make size of element here
+		//	elementSize = sizeof(int) + sizeof(int) + sizeof(Ship);
+		//	size = sizeof(MESSAGECODES); + elementSize;
+
+		//	PlayerStats bill();
+
+		//	data = new char[size];
+		//	*(int *)data = code;
+		//	(*(int*)(data + sizeof(int))) = (*environment[y * sx + x]).owner;
+		//	//*(int *)data + sizeof(msgType) = code;
+
+		//	break;
+	case POSITION_BULLET:
+		data = new char[1];
+		break;
+	default:
+		data = new char[1];
+		break;
+	}
+
+	return data;
+}
+
+void Client::deserialize(char * data, int size)
+{
+
+	MESSAGECODES msgType = (*(MESSAGECODES*)(data));
+
+	switch (msgType)
+	{
+	case ALIVE:
+		std::cout << " MESSAGE: ALIVE" << std::endl;
+		break;
+	case WORLDUPDATE:
+		std::cout << " MESSAGE: WORLDUPDATE" << std::endl;
+		break;
+	case KILL:
+		std::cout << " MESSAGE: KILL" << std::endl;
+		break;
+	case REVIVE:
+		std::cout << " MESSAGE: REVIVE" << std::endl;
+		break;
+	case PLAYER_STATS:
+		std::cout << " MESSAGE: PLAYER_STATS" << std::endl;
+
+
+		break;
+	case POSITION_BULLET:
+		std::cout << " MESSAGE: POSITION_BULLET" << std::endl;
+		break;
+	default:
+		std::cout << " MESSAGE: DEFAULT = " << std::to_string(msgType) << std::endl;
+		break;
+	}
+
+
+}

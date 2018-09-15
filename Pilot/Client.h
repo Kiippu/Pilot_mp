@@ -27,6 +27,13 @@ public:
 
 	/// Class Methods
 	void Initclient(char * serverIP, char * clientID);
+
+
+	// Serialise the data
+	char * serialize(int code, int & size);
+
+	// deserialize the environment from a block.
+	void deserialize(char * data, int size);
 };
 
 

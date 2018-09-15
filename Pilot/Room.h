@@ -63,7 +63,7 @@ public:
 	void addActor (Actor * actor);
 
 	// Serialise the data
-	char * serialize(int code, int & size, MESSAGECODES msgType);
+	char * serialize(int code, int & size);
 
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);

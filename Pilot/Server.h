@@ -4,7 +4,7 @@
 
 #include <vector>
 
-
+#include "Room.h"
 
 struct ClientAddr
 {
@@ -34,6 +34,9 @@ private:
 
 	std::vector<ClientAddr> m_clientList;
 
+	std::shared_ptr<Room> model = std::make_shared<Room>(-400, 400, 100, -500);
+	
+
 	Server() {};
 
 public:
@@ -43,8 +46,11 @@ public:
 	/// Class Methods
 	void InitServer(char* ipAddress = nullptr);
 
+	// Serialise the data
+	char * serialize(int code, int & size);
 
-
+	// deserialize the environment from a block.
+	void deserialize(char * data, int size);
 
 };
 

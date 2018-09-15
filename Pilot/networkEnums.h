@@ -1,6 +1,11 @@
+#ifndef NETWORKENUMS_H
+#define NETWORKENUMS_H
 
+
+
+#include "Ship.h"
 //Forward declaration of classes
-class Ship;
+//class Ship;
 
 enum MESSAGECODES { 
 	ALIVE,
@@ -58,10 +63,11 @@ class PlayerStats
 public:
 	int action;
 	int player;
-	Ship PlayerRef;
+	Ship * PlayerRef;
 	// add extra stats
 
-	PlayerStats(int p, Ship ref) : action(PLAYER_STATS), player(p), PlayerRef(ref) {}
+	PlayerStats() {};
+	PlayerStats(int p, Ship * ref) : action(PLAYER_STATS), player(p), PlayerRef(ref) {}
 };
 
 // A player update to the server:  player state
@@ -74,3 +80,6 @@ public:
 
 	PossitionBullet(int p) : action(POSITION_BULLET), player(p) {}
 };
+
+
+#endif // !NETWORKENUMS_H
