@@ -135,7 +135,7 @@ void Server::InitServer(char * ipAddress)
 			delete[] modeldata;
 		}
 
-		std::cout << "Server run: " << deltat << "             \r";
+		//std::cout << "Server run: " << deltat << "             \r";
 		//cout << "Server running: " << deltat << "\n";
 	}
 }
@@ -226,32 +226,25 @@ void Server::deserialize(char * data, int size)
 		break;
 	case PLAYER_STATS:
 	{
-		std::cout << " SERVER RECIEVED - MESSAGE: PLAYER_STATS" << std::endl;
 
-		elementSize = sizeof(PlayerDetails);
-
-
-		//TODO: deserialize this data properly all below to next comment is wrong
-		std::shared_ptr<PlayerDetails> pd = std::make_shared<PlayerDetails>();
-		pd->m_playerGameID = (*(PlayerStats*)(data)).player;
-		pd->posx = (*(PlayerStats*)(data)).posx;
-		pd->posy = (*(PlayerStats*)(data)).posy;
-		pd->speed = (*(PlayerStats*)(data)).speed;
-		pd->vx = (*(PlayerStats*)(data)).vx;
-		pd->vy = (*(PlayerStats*)(data)).vy;
-		// until here...
+		int playerID = (*(int*)(data + sizeof(int) + sizeof(int)));
+		std::cout << " SERVER RECIEVED - MESSAGE: PLAYER_STATS" << std::to_string(playerID) << std::endl;
 
 		// TODO: check if player had joined server before server made. ADD_PLAYER
+		playerID = (*(int*)(data + sizeof(int) + sizeof(int)));
 
 		for (int i = 0; i < m_playerList->size(); i++)
 		{
-			if (m_playerList->at(i)->m_playerGameID == pd->m_playerGameID)
+			if (m_playerList->at(i)->m_playerGameID == playerID)
 			{
-				m_playerList->at(i)->posx = (*(PlayerStats*)(data)).posx;
-				m_playerList->at(i)->posy = (*(PlayerStats*)(data)).posy;
-				m_playerList->at(i)->speed = (*(PlayerStats*)(data)).speed;
-				m_playerList->at(i)->vx = (*(PlayerStats*)(data)).vx;
-				m_playerList->at(i)->vy = (*(PlayerStats*)(data)).vy;
+				m_playerList->at(i)->posx =		(*(int*)(data + sizeof(int) + sizeof(int)));
+				m_playerList->at(i)->posy =		(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 1)));
+				m_playerList->at(i)->speed =	(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 2)));
+				m_playerList->at(i)->vx =		(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 3)));
+				m_playerList->at(i)->vy =		(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 4)));
+
+				
+				std::cout	<< "Player: " << std::to_string(playerID) << " - posX: " << std::to_string(m_playerList->at(i)->posx) << " - posY: " << std::to_string(m_playerList->at(i)->posy) << " - Speed: " << std::to_string(m_playerList->at(i)->speed) << " - velocityX: " << std::to_string(m_playerList->at(i)->vx) << " - velocityY: " << std::to_string(m_playerList->at(i)->vy) << "\r";
 			}
 		}
 		break;

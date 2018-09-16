@@ -172,8 +172,23 @@ void Client::serialize(int code)
 		break;
 		case PLAYER_STATS:
 		{
-			PlayerStats stats = m_ship->getShipNetworkStats();
-			sendto(m_socket_d, (const char *)&stats, sizeof(PlayerStats), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+			int size = sizeof(int) + sizeof(int) + (sizeof(double) * 5);
+
+			char * data = new char[size];
+
+			*(int*)data = code;
+			(*(int*)(data + sizeof(int))) = m_ship->getShipNetworkStats().player;
+			(*(double*)(data + sizeof(int) + sizeof(int))) = m_ship->getShipNetworkStats().posx;
+			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 1))) = m_ship->getShipNetworkStats().posy;
+			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 2))) = m_ship->getShipNetworkStats().speed;
+			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 3))) = m_ship->getShipNetworkStats().vx;
+			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 4))) = m_ship->getShipNetworkStats().vy;
+
+
+
+			//PlayerStats stats = m_ship->getShipNetworkStats();
+			sendto(m_socket_d, data, size, 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+			delete data;
 			break;
 		}
 	case POSITION_BULLET:
