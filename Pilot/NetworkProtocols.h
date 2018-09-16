@@ -1,9 +1,8 @@
 #ifndef NETWORKENUMS_H
 #define NETWORKENUMS_H
 
+#include <iostream>
 
-
-#include "Ship.h"
 //Forward declaration of classes
 //class Ship;
 
@@ -13,7 +12,8 @@ enum MESSAGECODES {
 	KILL,
 	REVIVE,
 	PLAYER_STATS,
-	POSITION_BULLET
+	POSITION_BULLET,
+	NEW_PLAYER
 };
 
 /***********************************************************************
@@ -32,6 +32,21 @@ public:
 	int player;
 
 	Alive(int p) : action(ALIVE), player(p) {}
+};
+
+// send server that a new player is trying to join
+class NewPlayer
+{
+public:
+	int m_action;
+	int m_playerID;
+	std::string m_playerName;
+
+
+	NewPlayer(int p, std::string name) : m_action(NEW_PLAYER), m_playerID(p), m_playerName(name) {};
+
+	void set();
+
 };
 
 // Send a player update to the server: player died
@@ -62,12 +77,25 @@ class PlayerStats
 {
 public:
 	int action;
+
+	// player game ID
 	int player;
-	Ship * PlayerRef;
+
+	// Position of the actor.
+	double posx;
+	double posy;
+
+	// Magnitude of velocity.
+	double speed;
+	// Unit velocity vector.
+	double vx;
+	double vy;
+
 	// add extra stats
 
 	PlayerStats() {};
-	PlayerStats(int p, Ship * ref) : action(PLAYER_STATS), player(p), PlayerRef(ref) {}
+	PlayerStats(double px, double py, double sp, double vx, double vy)
+		: action(PLAYER_STATS), posx(px), posy(py), speed(sp), vx(vx), vy(vy) {}
 };
 
 // A player update to the server:  player state

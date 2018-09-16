@@ -9,7 +9,7 @@ class Room;
 
 #include "QuickDraw.h"
 #include "Actor.h"
-#include "networkEnums.h"
+#include "NetworkProtocols.h"
 
 // A room is a box with a number of obstacles.
 class Obstacle

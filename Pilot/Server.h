@@ -1,17 +1,35 @@
 #pragma once
-#ifndef SERVER_SINGLE
-#define SERVER_SINGLE
+#ifndef SERVER_H
+#define SERVER_H
 
 #include <vector>
 
 #include "Room.h"
 
+class NewPlayer;
+
 struct ClientAddr
 {
 	int ip;
 	int port;
-
+	
 	ClientAddr(int IP, int PORT) : ip(IP), port(PORT) {}
+};
+
+struct PlayerDetails
+{
+	int m_playerGameID;
+	std::string m_playerName;
+
+	// Position of the actor.
+	double posx;
+	double posy;
+
+	// Magnitude of velocity.
+	double speed;
+	// Unit velocity vector.
+	double vx;
+	double vy;
 };
 
 class Server
@@ -34,7 +52,9 @@ private:
 
 	std::vector<ClientAddr> m_clientList;
 
-	std::shared_ptr<Room> model = std::make_shared<Room>(-400, 400, 100, -500);
+	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> m_playerList = std::make_shared<std::vector<std::shared_ptr<PlayerDetails>>>();
+
+	std::shared_ptr<Room> m_model = std::make_shared<Room>(-400, 400, 100, -500);
 	
 
 	Server() {};
@@ -52,9 +72,11 @@ public:
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);
 
+	void addPlayer( NewPlayer & np);
+
 };
 
 
 
-#endif // !SERVER_SINGLE
+#endif // !SERVER_H
 

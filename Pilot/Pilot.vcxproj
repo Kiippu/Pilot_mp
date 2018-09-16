@@ -151,7 +151,7 @@
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="Model.h" />
-    <ClInclude Include="networkEnums.h" />
+    <ClInclude Include="NetworkProtocols.h" />
     <ClInclude Include="QuickDraw.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="Server.h" />
@@ -164,6 +164,7 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="NetworkProtocols.cpp" />
     <ClCompile Include="Pilot.cpp" />
     <ClCompile Include="QuickDraw.cpp" />
     <ClCompile Include="Room.cpp" />

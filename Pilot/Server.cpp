@@ -10,7 +10,8 @@
 #include "Server.h"
 #include "Timer.h"
 #include "Room.h"
-#include "networkEnums.h"
+#include "NetworkProtocols.h"
+#include "Ship.h"
 
 
 void Server::InitServer(char * ipAddress)
@@ -67,8 +68,8 @@ void Server::InitServer(char * ipAddress)
 		deltat = avgdeltat;
 		lasttime = lasttime + deltat;
 
-		// Update the model - the representation of the game environment.
-		model->update(deltat);
+		// Update the m_model - the representation of the game environment.
+		m_model->update(deltat);
 
 		struct sockaddr_in aClientsAddress; // connector's address information
 		int addr_len = sizeof(struct sockaddr);
@@ -215,34 +216,62 @@ void Server::deserialize(char * data, int size)
 
 	switch (msgType)
 	{
+	case NEW_PLAYER:
+		//NewPlayer np = *(NewPlayer*)(data);
+		elementSize = sizeof(Ship);
+		addPlayer(*(NewPlayer*)(data));
+		break;
 	case ALIVE:
 		std::cout << " MESSAGE: ALIVE" << std::endl;
 		break;
-	case WORLDUPDATE:
-		std::cout << " MESSAGE: WORLDUPDATE" << std::endl;
-		break;
-	case KILL:
-		std::cout << " MESSAGE: KILL" << std::endl;
-		break;
-	case REVIVE:
-		std::cout << " MESSAGE: REVIVE" << std::endl;
-		break;
 	case PLAYER_STATS:
-		std::cout << " MESSAGE: PLAYER_STATS" << std::endl;
+	{
+		std::cout << " SERVER RECIEVED - MESSAGE: PLAYER_STATS" << std::endl;
 
-		elementSize = sizeof(PlayerStats);
+		elementSize = sizeof(PlayerDetails);
 
 
+		//TODO: deserialize this data properly all below to next comment is wrong
+		std::shared_ptr<PlayerDetails> pd = std::make_shared<PlayerDetails>();
+		pd->m_playerGameID = (*(PlayerStats*)(data)).player;
+		pd->posx = (*(PlayerStats*)(data)).posx;
+		pd->posy = (*(PlayerStats*)(data)).posy;
+		pd->speed = (*(PlayerStats*)(data)).speed;
+		pd->vx = (*(PlayerStats*)(data)).vx;
+		pd->vy = (*(PlayerStats*)(data)).vy;
+		// until here...
 
+		// TODO: check if player had joined server before server made. ADD_PLAYER
+
+		for (int i = 0; i < m_playerList->size(); i++)
+		{
+			if (m_playerList->at(i)->m_playerGameID == pd->m_playerGameID)
+			{
+				m_playerList->at(i)->posx = (*(PlayerStats*)(data)).posx;
+				m_playerList->at(i)->posy = (*(PlayerStats*)(data)).posy;
+				m_playerList->at(i)->speed = (*(PlayerStats*)(data)).speed;
+				m_playerList->at(i)->vx = (*(PlayerStats*)(data)).vx;
+				m_playerList->at(i)->vy = (*(PlayerStats*)(data)).vy;
+			}
+		}
 		break;
+	}
 	case POSITION_BULLET:
 		std::cout << " MESSAGE: POSITION_BULLET" << std::endl;
 		break;
 	default:
-		std::cout << " MESSAGE: DEFAULT = " << std::to_string(msgType) << std::endl;
+		std::cout << "SERVER RECIEVED -  ERROR: << " << std::to_string(msgType) << " >> message type is not recognised" << std::endl;
 		break;
 	}
 
 
+}
+
+void Server::addPlayer(NewPlayer & np)
+{
+	std::shared_ptr<PlayerDetails> newPlayer = std::make_shared<PlayerDetails>();
+	newPlayer->m_playerGameID = np.m_playerID;
+	newPlayer->m_playerName = np.m_playerName;
+	m_playerList->push_back(newPlayer);
 }
 

@@ -21,10 +21,10 @@ Bullet::~Bullet(void)
 {
 }
 
-bool Bullet::update (Model & model, double deltat)
+bool Bullet::update (Model & m_model, double deltat)
 
 {
-	return basicUpdate (model, deltat);
+	return basicUpdate (m_model, deltat);
 }
 
 void Bullet::display (View & view, double offsetx, double offsety, double scale)

@@ -25,7 +25,7 @@ protected:
 
 	// Move the actor by adding speed * deltat to position. Returns false if the move
 	// if blocked.
-	bool basicUpdate (Model & model, double deltat);
+	bool basicUpdate (Model & m_model, double deltat);
 
 public:
 	enum ActorTypes { UNDEFINED, PLAYER, RAT, BULLET, RATFACTORY, SHIP };
@@ -45,7 +45,7 @@ public:
 
 	// Read input and update state accordingly. Returns false if update failed (hit a wall) and
 	// the actor must be destroyed.
-	virtual bool update (Model & model, double deltat) = 0;
+	virtual bool update (Model & m_model, double deltat) = 0;
 
 	// Show the actor.
 	virtual void display (View & view, double offsetx, double offsety, double scale) = 0;

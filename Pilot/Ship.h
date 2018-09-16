@@ -16,6 +16,8 @@ private:
 	// state for an internal state machine.
 	int mode;
 
+	std::string name;
+
 	// support variable, used to disable the ship for a certain amount of
 	// time, when hit.
 	double recoverytimer;
@@ -28,9 +30,6 @@ private:
 	// the current target.
 	Ship * target;
 
-	// name of player
-	std::string name;
-
 	double score;
 
 	bool thruston;
@@ -42,7 +41,7 @@ public:
 	virtual ~Ship(void);
 
 	// Read input and update state accordingly.
-	virtual bool update(Model & model, double deltat);
+	virtual bool update(Model & m_model, double deltat);
 
 	// Show the Ship.
 	virtual void display(View & view, double offsetx, double offsety, double scale);
@@ -51,7 +50,7 @@ public:
 	void triggerKill();
 
 	// simple control routine.
-	void doAI(Model & model, double & controlthrust, double & controlleft, double & controlright, double & controlfire);
+	void doAI(Model & m_model, double & controlthrust, double & controlleft, double & controlright, double & controlfire);
 
 	// return current score
 	double getScore();
@@ -61,6 +60,9 @@ public:
 
 	// returns true if the ship is allowed to be shot.
 	bool isFairGame();
+
+	// player stats to be serialized
+	PlayerStats & getShipNetworkStats();
 };
 
 #endif // __PILOT_SHIP

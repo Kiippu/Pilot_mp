@@ -23,12 +23,12 @@ Actor::~Actor(void)
 {
 }
 
-bool Actor::basicUpdate (Model & model, double deltat)
+bool Actor::basicUpdate (Model & m_model, double deltat)
 {
 	double newposx = posx + speed * vx * deltat;
 	double newposy = posy + speed * vy * deltat;
 
-	if (model.canMove (posx, posy, newposx, newposy))
+	if (m_model.canMove (posx, posy, newposx, newposy))
 	{
 		posx = newposx;
 		posy = newposy;

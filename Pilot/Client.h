@@ -4,7 +4,7 @@
 
 #include <WinSock2.h>
 
-
+class Ship;
 
 class Client
 {
@@ -22,18 +22,22 @@ private:
 	struct sockaddr_in m_client_addr;	// my address information
 	struct sockaddr_in m_server_addr;	// server address information
 
+	int m_gameID = -1;
+
+	Ship * m_ship = nullptr;
+
 
 public:
 
 	/// Class Methods
 	void Initclient(char * serverIP, char * clientID);
 
-
 	// Serialise the data
-	char * serialize(int code, int & size);
+	void serialize(int code);
 
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);
+
 };
 
 

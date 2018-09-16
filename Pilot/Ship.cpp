@@ -35,7 +35,7 @@ Ship::~Ship(void)
 
 }
 
-bool Ship::update(Model & model, double deltat)
+bool Ship::update(Model & m_model, double deltat)
 
 {
 	double newposx = posx;
@@ -87,7 +87,7 @@ bool Ship::update(Model & model, double deltat)
 	}
 	if (mode == AUTO) // AI! controlled.
 	{
-		doAI(model, controlthrust, controlleft, controlright, controlfire);
+		doAI(m_model, controlthrust, controlleft, controlright, controlfire);
 	}
 	// may be another mode here that controls nodes from information
 	// received over the network?
@@ -116,7 +116,7 @@ bool Ship::update(Model & model, double deltat)
 	newposx = posx + vx * deltat;
 	newposy = posy + vy * deltat;
 
-	if (model.canMove(posx, posy, newposx, newposy))
+	if (m_model.canMove(posx, posy, newposx, newposy))
 	{
 		posx = newposx;
 		posy = newposy;
@@ -148,7 +148,7 @@ bool Ship::update(Model & model, double deltat)
 		double bvx = bulletspeed * fx / flen + vx;
 		double bvy = bulletspeed * fy / flen + vy;
 
-		model.addActor(new Bullet(bulletposx, bulletposy, bvx, bvy, this));
+		m_model.addActor(new Bullet(bulletposx, bulletposy, bvx, bvy, this));
 		bulletstimeout = bulletinterval;
 	}
 
@@ -222,13 +222,13 @@ void Ship::display(View & view, double offsetx, double offsety, double scale)
 	}
 }
 
-void Ship::doAI(Model & model, double & controlthrust, double & controlleft, double & controlright, double & controlfire)
+void Ship::doAI(Model & m_model, double & controlthrust, double & controlleft, double & controlright, double & controlfire)
 
 {
 	if (target == NULL)
 	{
 		// find someone to shoot at.
-		vector <Actor *> actors = model.getActors();
+		vector <Actor *> actors = m_model.getActors();
 		for (std::vector <Actor *>::iterator i = actors.begin(); i != actors.end(); i++)
 		{
 			if (((*i)->getType() == SHIP) && (*i != this) /*&& ((Ship *)*i)->isFairGame()*/ && (rand() % 5 == 1))
@@ -293,4 +293,11 @@ bool Ship::isFairGame()
 
 {
 	return (mode != RECOVERY);
+}
+
+
+PlayerStats & Ship::getShipNetworkStats()
+{
+	PlayerStats sp(posx,posy,speed,vx,vy);
+	return sp;
 }

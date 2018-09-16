@@ -16,7 +16,7 @@ public:
 
 	// Read input and update state accordingly. Returns false if move failed because the 
 	// bullet hit a wall.
-	virtual bool update (Model & model, double deltat);
+	virtual bool update (Model & m_model, double deltat);
 
 	// Draw the Bullet.
 	virtual void display (View & view, double offsetx, double offsety, double scale);

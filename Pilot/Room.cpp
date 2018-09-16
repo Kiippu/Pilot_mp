@@ -7,7 +7,7 @@
 #include "Room.h"
 #include "Ship.h"
 #include "Bullet.h"
-#include "networkEnums.h"
+#include "NetworkProtocols.h"
 
 Obstacle::Obstacle (int xa, int ya, int rad) : x1(xa), y1(ya), radius(rad)
 {
