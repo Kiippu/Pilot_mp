@@ -18,6 +18,8 @@ private:
 
 	std::string name;
 
+	int m_playerID;
+
 	// support variable, used to disable the ship for a certain amount of
 	// time, when hit.
 	double recoverytimer;
@@ -30,9 +32,6 @@ private:
 	// the current target.
 	Ship * target;
 
-	// reference to world
-	 
-
 	double score;
 
 	bool thruston;
@@ -40,7 +39,7 @@ private:
 public:
 	enum ActorTypes { INPLAY, AUTO, RECOVERY, NETWORKPLAYER };
 
-	Ship(Controller & cntrller, int initmode, std::string name);
+	Ship(Controller & cntrller, int initmode, std::string name, int playerID);
 	virtual ~Ship(void);
 
 	// Read input and update state accordingly.
@@ -56,7 +55,7 @@ public:
 	void doAI(Model & m_model, double & controlthrust, double & controlleft, double & controlright, double & controlfire);
 
 	// update network players
-	void UpdateNetworkPlayer();
+	void UpdateNetworkPlayer(double & controlthrust, double & controlleft, double & controlright, double & controlfire);
 
 	// return current score
 	double getScore();

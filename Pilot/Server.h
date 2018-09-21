@@ -30,6 +30,14 @@ struct PlayerDetails
 	// Unit velocity vector.
 	double vx;
 	double vy;
+
+	//current movement states
+	bool forward;
+	bool left;
+	bool right;
+
+	// shoot state
+	bool fire;
 };
 
 class Server
@@ -76,6 +84,9 @@ public:
 	void deserialize(char * data, int size);
 
 	void addPlayer( NewPlayer & np);
+
+	//get current server player details
+	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> & getPlayerDetails() { return  m_playerList; }
 
 };
 

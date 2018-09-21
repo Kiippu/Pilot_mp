@@ -13,7 +13,9 @@ enum MESSAGECODES {
 	REVIVE,
 	PLAYER_STATS,
 	NEW_PLAYER,
-	SHOOT_BULLET
+	SHOOT_BULLET,
+	PLAYER_MOVEMENT,
+	CREATE_ROOM
 };
 
 /***********************************************************************
@@ -32,6 +34,16 @@ public:
 	int player;
 
 	Alive(int p) : action(ALIVE), player(p) {}
+};
+
+class CreateRoom
+{
+	int left;
+	int right;
+	int top;
+	int bottom;
+
+	CreateRoom() {}
 };
 
 // send server that a new player is trying to join
@@ -70,6 +82,19 @@ public:
 	// add extra stats
 
 	Revive(int p) : action(REVIVE), player(p) {}
+};
+
+class PlayerMovement
+{
+public:
+	int action;
+	int player;
+	bool forward = false;
+	bool left = false;
+	bool right = false;
+	bool fire = false;
+
+	PlayerMovement(int p) : action(PLAYER_MOVEMENT), player(p) {}
 };
 
 // A player update to the server:  player state

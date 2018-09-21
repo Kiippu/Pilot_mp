@@ -17,15 +17,6 @@
 
 const int gamePort = 33303;
 
-Client::Client()
-{
-}
-
-
-Client::~Client()
-{
-}
-
 void Client::Initclient(char * serverIP, char * clientID)
 {
 
@@ -37,8 +28,10 @@ void Client::Initclient(char * serverIP, char * clientID)
 
 	/// game enviroment
 	Room m_model(-400, 400, 100, -500);
-	m_ship = new Ship(controller, Ship::INPLAY, m_usersName);
+	m_ship = new Ship(controller, Ship::INPLAY, m_usersName, (int)(*clientID - '0'));
 	m_model.addActor(m_ship);
+
+	m_networkMovement = new PlayerMovement((int)(*clientID - '0'));
 
 	//// Add some opponents. These are computer controlled - for the moment...
 	//Ship * opponent;
@@ -134,7 +127,10 @@ void Client::Initclient(char * serverIP, char * clientID)
 
 
 		// Allow the environment to update.
-		m_model.update(deltat);
+		//m_model.update(deltat);
+		m_model.update(0.016);
+
+		std::cout << "DT: " << std::to_string(deltat) << std::endl;
 
 		// Schedule a screen update event.
 		view.clearScreen();
@@ -151,7 +147,7 @@ void Client::Initclient(char * serverIP, char * clientID)
 		// send current data to server after revieving current game state
 		//PlayerStats stats(player);
 		//sendto(m_socket_d, (const char *)&stats, sizeof(stats), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
-		serialize(PLAYER_STATS);
+		//serialize(PLAYER_STATS);
 	}
 }
 
@@ -181,12 +177,27 @@ void Client::serialize(int code)
 		sendto(m_socket_d, (const char *)&addMePlease, sizeof(addMePlease), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 		break;
 	}
+	case PLAYER_MOVEMENT: {
+		int size = sizeof(int) + sizeof(int) + ((sizeof(bool) * 4) + sizeof(int));
+
+		char * data = new char[size];
+		*(int*)data = code;
+		(*(int*)(data + sizeof(int))) = m_gameID;
+		(*(bool*)(data + sizeof(int) + sizeof(int))) = m_networkMovement->forward;
+		(*(bool*)(data + sizeof(int) + sizeof(int) + (sizeof(bool) * 1))) = m_networkMovement->left;
+		(*(bool*)(data + sizeof(int) + sizeof(int) + (sizeof(bool) * 2))) = m_networkMovement->right;
+		(*(bool*)(data + sizeof(int) + sizeof(int) + (sizeof(bool) * 3))) = m_networkMovement->fire;
+
+		sendto(m_socket_d, data, size, 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+		delete data;
+		break;
+	}
 	case PLAYER_STATS:
 		{
 			int size = sizeof(int) + sizeof(int) + (sizeof(double) * 5);
 
 			char * data = new char[size];
-			std::cout << "player ID: " << std::to_string(m_gameID);
+			//std::cout << "player ID: " << std::to_string(m_gameID);
 			*(int*)data = code;
 			(*(int*)(data + sizeof(int))) = m_gameID;
 			(*(double*)(data + sizeof(int) + sizeof(int))) = m_ship->getShipNetworkStats().posx;
@@ -215,10 +226,10 @@ void Client::deserialize(char * data, int size)
 	switch (msgType)
 	{
 	case WORLDUPDATE:
-		std::cout << "CLIENT RECIEVED - MESSAGE: WORLDUPDATE" << std::endl;
+		//std::cout << "CLIENT RECIEVED - MESSAGE: WORLDUPDATE" << std::endl;
 		break;
 	default:
-		std::cout << "CLIENT RECIEVED -  MESSAGE: DEFAULT = " << std::to_string(msgType) << std::endl;
+		//std::cout << "CLIENT RECIEVED -  MESSAGE: DEFAULT = " << std::to_string(msgType) << std::endl;
 		break;
 	}
 

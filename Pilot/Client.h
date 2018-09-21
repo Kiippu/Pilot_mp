@@ -2,15 +2,17 @@
 #ifndef CLIENT
 #define CLIENT
 
-#include <WinSock2.h>
-
 class Ship;
+class PlayerMovement;
 
 class Client
 {
 public:
-	Client();
-	~Client();
+	static Client& getInstance()
+	{
+		static Client    instance;
+		return instance;
+	}
 
 
 private:
@@ -29,7 +31,11 @@ private:
 	Ship * m_ship = nullptr;
 
 
+	Client() {};
+
 public:
+	Client(Client const&) = delete;
+	void operator=(Client const&) = delete;
 
 	/// Class Methods
 	void Initclient(char * serverIP, char * clientID);
@@ -40,6 +46,7 @@ public:
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);
 
+	PlayerMovement * m_networkMovement;
 };
 
 

@@ -75,10 +75,10 @@ Room::Room(int l, int r, int t, int b) : left (l), right (r), top (t), bottom (b
 	srand (199);
 	int lr = right - left;
 	int tb = top - bottom;
-	for (int i = 0; i < NUMOBSTACLES; i++)
-	{
-		obstacles.push_back (new Obstacle (rand () % (lr) + left, rand () % tb + bottom, rand () % (lr / 10)));
-	}
+	////for (int i = 0; i < NUMOBSTACLES; i++)
+	//{
+	//	obstacles.push_back (new Obstacle (rand () % (lr) + left, rand () % tb + bottom, rand () % (lr / 10)));
+	//}
 }
 
 

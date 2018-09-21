@@ -78,7 +78,8 @@ void Server::InitServer(char * ipAddress)
 		lasttime = lasttime + deltat;
 
 		// Update the m_model - the representation of the game environment.
-		m_model->update(deltat);
+		//m_model->update(deltat);
+		m_model->update(0.016);
 
 		struct sockaddr_in aClientsAddress; // connector's address information
 		int addr_len = sizeof(struct sockaddr);
@@ -150,6 +151,8 @@ void Server::InitServer(char * ipAddress)
 		// Allow the environment to update.
 		m_model->update(deltat);
 
+		std::cout << "DT: " << std::to_string(deltat) << std::endl;
+
 		// Schedule a screen update event.
 		view.clearScreen();
 		double offsetx = 0.0;
@@ -195,11 +198,15 @@ char * Server::serialize(int code, int & size)
 	case ALIVE:
 		data = new char[1];
 		break;
-	case WORLDUPDATE:
+	case WORLDUPDATE: {
 		size = sizeof(MESSAGECODES); //+elementsize;
 		data = new char[size];
 		*(int *)data = code;
+
+
+
 		break;
+	}
 	case REVIVE:
 		data = new char[1];
 		break;
@@ -226,9 +233,23 @@ void Server::deserialize(char * data, int size)
 	case ALIVE:
 		std::cout << " MESSAGE: ALIVE" << std::endl;
 		break;
+	case PLAYER_MOVEMENT: {
+
+		int playerID = (*(int*)(data + (sizeof(int))));
+		for (size_t i = 0; i < m_playerList->size(); i++)
+		{
+			if (m_playerList->at(i)->m_playerGameID == playerID)
+			{
+				m_playerList->at(i)->forward = (*(bool*)(data + sizeof(int) + sizeof(int)));
+				m_playerList->at(i)->left = (*(bool*)(data + sizeof(int) + sizeof(int) + (sizeof(bool) * 1)));
+				m_playerList->at(i)->right = (*(bool*)(data + sizeof(int) + sizeof(int) + (sizeof(bool) * 2)));
+				m_playerList->at(i)->fire = (*(bool*)(data + sizeof(int) + sizeof(int) + (sizeof(bool) * 3)));
+			}
+		}
+		break;
+	}
 	case PLAYER_STATS:
 	{
-
 		int playerID = (*(int*)(data + (sizeof(int))));
 
 		for (size_t i = 0; i < m_playerList->size(); i++)
@@ -240,13 +261,6 @@ void Server::deserialize(char * data, int size)
 				m_playerList->at(i)->speed =	(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 2)));
 				m_playerList->at(i)->vx =		(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 3)));
 				m_playerList->at(i)->vy =		(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 4)));
-
-				
-				std::cout	<< "Player: " << std::to_string(playerID) << " - posX: " << std::to_string(m_playerList->at(i)->posx) << " - posY: " << std::to_string(m_playerList->at(i)->posy) << " - Speed: " << std::to_string(m_playerList->at(i)->speed) << " - velocityX: " << std::to_string(m_playerList->at(i)->vx) << " - velocityY: " << std::to_string(m_playerList->at(i)->vy) << "\r";
-				if (playerID != 1)
-				{
-					std::cout << "" <<std::endl;
-				}
 			}
 		}
 		break;
@@ -266,7 +280,7 @@ void Server::addPlayer(NewPlayer & np)
 	m_playerList->push_back(newPlayer);
 
 	// add ship to enviroment
-	Ship * s = new Ship(*m_controller, Ship::NETWORKPLAYER, np.m_playerName);
+	Ship * s = new Ship(*m_controller, Ship::NETWORKPLAYER, np.m_playerName, np.m_playerID);
 	m_model->addActor(s);
 }
 

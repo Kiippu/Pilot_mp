@@ -2,13 +2,15 @@
 #include "Room.h"
 #include "Ship.h"
 #include "Bullet.h"
+#include "Server.h"
+#include "Client.h"
 
 #include <iostream>
 #include <vector>
 
 using namespace std;
 
-Ship::Ship(Controller & cntrller, int initmode, std::string name) : Actor(), controller(cntrller), playmode(initmode), name(name)
+Ship::Ship(Controller & cntrller, int initmode, std::string name, int ID) : Actor(), controller(cntrller), playmode(initmode), name(name), m_playerID(ID)
 {
 	posx = 0;
 	posy = 0;
@@ -71,19 +73,32 @@ bool Ship::update(Model & m_model, double deltat)
 		if (controller.isActive('W'))
 		{
 			controlthrust = 1.0;
+			Client::getInstance().m_networkMovement->forward = true;
 		}
+		else
+			Client::getInstance().m_networkMovement->forward = false;
 		if (controller.isActive('A'))
 		{
 			controlleft = 1.0;
+			Client::getInstance().m_networkMovement->left = true;
 		}
+		else
+			Client::getInstance().m_networkMovement->left = false;
 		if (controller.isActive('D'))
 		{
 			controlright = 1.0;
+			Client::getInstance().m_networkMovement->right = true;
 		}
+		else
+			Client::getInstance().m_networkMovement->right = false;
 		if (controller.isActive(VK_SPACE))
 		{
 			controlfire = 1.0;
+			Client::getInstance().m_networkMovement->fire = true;
 		}
+		else
+			Client::getInstance().m_networkMovement->fire = false;
+		Client::getInstance().serialize(PLAYER_MOVEMENT);
 	}
 	if (mode == AUTO) // AI! controlled.
 	{
@@ -92,7 +107,7 @@ bool Ship::update(Model & m_model, double deltat)
 	// network input players
 	if (mode == NETWORKPLAYER)
 	{
-
+		UpdateNetworkPlayer(controlthrust, controlleft, controlright, controlfire);
 	}
 
 	accx += controlthrust * thrust * -sin(direction);
@@ -109,7 +124,7 @@ bool Ship::update(Model & m_model, double deltat)
 		thruston = false;
 	}
 
-	double grav = 5.01;
+	double grav = 0.0;
 	if (mode == RECOVERY)
 	{
 		grav = 0.0;
@@ -277,6 +292,26 @@ void Ship::doAI(Model & m_model, double & controlthrust, double & controlleft, d
 		//{
 		//	target = NULL;
 		//}
+	}
+}
+
+void Ship::UpdateNetworkPlayer(double & controlthrust, double & controlleft, double & controlright, double & controlfire)
+{
+	size_t size = Server::getInstance().getPlayerDetails()->size();
+	auto list = Server::getInstance().getPlayerDetails();
+	for (size_t i = 0; i < size; i++)
+	{
+		if (list->at(i)->m_playerGameID == m_playerID)
+		{
+			if (list->at(i)->forward)
+				controlthrust = 1.0;
+			if (list->at(i)->left)
+				controlleft = 1.0;
+			if (list->at(i)->right)
+				controlright = 1.0;
+			if (list->at(i)->fire)
+				controlfire = 1.0;
+		}
 	}
 }
 
