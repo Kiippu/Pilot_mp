@@ -9,11 +9,11 @@
 enum MESSAGECODES { 
 	ALIVE,
 	WORLDUPDATE,
-	KILL,
+	DEAD,
 	REVIVE,
 	PLAYER_STATS,
-	POSITION_BULLET,
-	NEW_PLAYER
+	NEW_PLAYER,
+	SHOOT_BULLET
 };
 
 /***********************************************************************
@@ -50,14 +50,14 @@ public:
 };
 
 // Send a player update to the server: player died
-class Kill
+class Dead
 {
 public:
 	int action;
 	int player;
 	// add extra stats
 
-	Kill(int p) : action(KILL), player(p) {}
+	Dead(int p) : action(DEAD), player(p) {}
 	//Kill(int p, int sx, int sy, int dx, int dy) : action(KILL), player(p), sourcex(sx), sourcey(sy), destx(dx), desty(dy) {}
 };
 
@@ -98,15 +98,14 @@ public:
 		: action(PLAYER_STATS), posx(px), posy(py), speed(sp), vx(vx), vy(vy) {}
 };
 
-// A player update to the server:  player state
-class PossitionBullet
+// A player shot a bullet - from client to server
+class ShootBullet
 {
 public:
 	int action;
 	int player;
-	// add extra stats
 
-	PossitionBullet(int p) : action(POSITION_BULLET), player(p) {}
+	ShootBullet(int p) : action(SHOOT_BULLET), player(p) {}
 };
 
 

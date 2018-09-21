@@ -27,11 +27,20 @@ void Server::InitServer(char * ipAddress)
 	}
 	
 
+	QuickDraw window;
+	View & view = (View &)window;
+	m_controller = &(Controller &)window;
+
+	/// game enviroment
+	m_room = new Room(-400, 400, 100, -500);
+
 	// Create a timer to measure the real time since the previous game cycle.
 	Timer timer;
 	timer.mark(); // zero the timer.
 	double lasttime = timer.interval();
 	double avgdeltat = 0.0;
+
+	double scale = 1.0;
 
 	// Set up the socket.
 	m_socket_d = socket(AF_INET, SOCK_DGRAM, 0);
@@ -137,6 +146,20 @@ void Server::InitServer(char * ipAddress)
 
 		//std::cout << "Server run: " << deltat << "             \r";
 		//cout << "Server running: " << deltat << "\n";
+
+		// Allow the environment to update.
+		m_model->update(deltat);
+
+		// Schedule a screen update event.
+		view.clearScreen();
+		double offsetx = 0.0;
+		double offsety = 0.0;
+		m_model->display(view, offsetx, offsety, scale);
+
+		//std::ostringstream score;
+		//score << "SERVER ";
+		//view.drawText(20, 20, score.str());
+		view.swapBuffer();
 	}
 }
 
@@ -176,28 +199,8 @@ char * Server::serialize(int code, int & size)
 		size = sizeof(MESSAGECODES); //+elementsize;
 		data = new char[size];
 		*(int *)data = code;
-
-		break;
-	case KILL:
-		data = new char[1];
 		break;
 	case REVIVE:
-		data = new char[1];
-		break;
-		//case PLAYER_STATS:
-		//	// make size of element here
-		//	elementSize = sizeof(int) + sizeof(int) + sizeof(Ship);
-		//	size = sizeof(MESSAGECODES); + elementSize;
-
-		//	PlayerStats bill();
-
-		//	data = new char[size];
-		//	*(int *)data = code;
-		//	(*(int*)(data + sizeof(int))) = (*environment[y * sx + x]).owner;
-		//	//*(int *)data + sizeof(msgType) = code;
-
-		//	break;
-	case POSITION_BULLET:
 		data = new char[1];
 		break;
 	default:
@@ -216,28 +219,23 @@ void Server::deserialize(char * data, int size)
 
 	switch (msgType)
 	{
-	case NEW_PLAYER:
-		//NewPlayer np = *(NewPlayer*)(data);
-		elementSize = sizeof(Ship);
+	case NEW_PLAYER: {
 		addPlayer(*(NewPlayer*)(data));
 		break;
+	}
 	case ALIVE:
 		std::cout << " MESSAGE: ALIVE" << std::endl;
 		break;
 	case PLAYER_STATS:
 	{
 
-		int playerID = (*(int*)(data + sizeof(int) + sizeof(int)));
-		std::cout << " SERVER RECIEVED - MESSAGE: PLAYER_STATS" << std::to_string(playerID) << std::endl;
+		int playerID = (*(int*)(data + (sizeof(int))));
 
-		// TODO: check if player had joined server before server made. ADD_PLAYER
-		playerID = (*(int*)(data + sizeof(int) + sizeof(int)));
-
-		for (int i = 0; i < m_playerList->size(); i++)
+		for (size_t i = 0; i < m_playerList->size(); i++)
 		{
 			if (m_playerList->at(i)->m_playerGameID == playerID)
 			{
-				m_playerList->at(i)->posx =		(*(int*)(data + sizeof(int) + sizeof(int)));
+				m_playerList->at(i)->posx =		(*(double*)(data + sizeof(int) + sizeof(int)));
 				m_playerList->at(i)->posy =		(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 1)));
 				m_playerList->at(i)->speed =	(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 2)));
 				m_playerList->at(i)->vx =		(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 3)));
@@ -245,26 +243,30 @@ void Server::deserialize(char * data, int size)
 
 				
 				std::cout	<< "Player: " << std::to_string(playerID) << " - posX: " << std::to_string(m_playerList->at(i)->posx) << " - posY: " << std::to_string(m_playerList->at(i)->posy) << " - Speed: " << std::to_string(m_playerList->at(i)->speed) << " - velocityX: " << std::to_string(m_playerList->at(i)->vx) << " - velocityY: " << std::to_string(m_playerList->at(i)->vy) << "\r";
+				if (playerID != 1)
+				{
+					std::cout << "" <<std::endl;
+				}
 			}
 		}
 		break;
 	}
-	case POSITION_BULLET:
-		std::cout << " MESSAGE: POSITION_BULLET" << std::endl;
-		break;
 	default:
 		std::cout << "SERVER RECIEVED -  ERROR: << " << std::to_string(msgType) << " >> message type is not recognised" << std::endl;
 		break;
 	}
-
-
 }
 
 void Server::addPlayer(NewPlayer & np)
 {
+	// add ship to server data
 	std::shared_ptr<PlayerDetails> newPlayer = std::make_shared<PlayerDetails>();
 	newPlayer->m_playerGameID = np.m_playerID;
 	newPlayer->m_playerName = np.m_playerName;
 	m_playerList->push_back(newPlayer);
+
+	// add ship to enviroment
+	Ship * s = new Ship(*m_controller, Ship::NETWORKPLAYER, np.m_playerName);
+	m_model->addActor(s);
 }
 

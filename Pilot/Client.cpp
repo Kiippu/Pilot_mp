@@ -29,8 +29,7 @@ Client::~Client()
 void Client::Initclient(char * serverIP, char * clientID)
 {
 
-	std::string playersName;
-	std::cin >> playersName;
+	std::cin >> m_usersName;
 
 	QuickDraw window;
 	View & view = (View &)window;
@@ -38,7 +37,7 @@ void Client::Initclient(char * serverIP, char * clientID)
 
 	/// game enviroment
 	Room m_model(-400, 400, 100, -500);
-	m_ship = new Ship(controller, Ship::INPLAY, "You");
+	m_ship = new Ship(controller, Ship::INPLAY, m_usersName);
 	m_model.addActor(m_ship);
 
 	//// Add some opponents. These are computer controlled - for the moment...
@@ -85,13 +84,11 @@ void Client::Initclient(char * serverIP, char * clientID)
 
 	// Send a welcome message to server saying this client is 'alive'
 	// Will get this client added to server list...
-	Alive aliveMsg(m_gameID);
-	sendto(m_socket_d, (const char *)&aliveMsg, sizeof(aliveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+	serialize(ALIVE);
 	//sendto(m_socket_d, (const char *)&aliveMsg, sizeof(aliveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 
 	// add this client as an active player on the server.
-	NewPlayer addMePlease(m_gameID,playersName);
-	sendto(m_socket_d, (const char *)&addMePlease, sizeof(addMePlease), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+	serialize(NEW_PLAYER);
 
 
 	// Very similar to the single player version - spot the difference.
@@ -164,34 +161,46 @@ void Client::serialize(int code)
 {
 	switch (code)
 	{
-	case ALIVE:
+	case ALIVE: {
+		Alive aliveMsg(m_gameID);
+		sendto(m_socket_d, (const char *)&aliveMsg, sizeof(aliveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 		break;
-	case KILL:
+	}
+	case DEAD: {
+		Dead deadMsg(m_gameID);
+		sendto(m_socket_d, (const char *)&deadMsg, sizeof(deadMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 		break;
-	case REVIVE:
+	}
+	case REVIVE: {
+		Revive reviveMsg(m_gameID);
+		sendto(m_socket_d, (const char *)&reviveMsg, sizeof(reviveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 		break;
-		case PLAYER_STATS:
+	}
+	case NEW_PLAYER: {
+		NewPlayer addMePlease(m_gameID, m_usersName);
+		sendto(m_socket_d, (const char *)&addMePlease, sizeof(addMePlease), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+		break;
+	}
+	case PLAYER_STATS:
 		{
 			int size = sizeof(int) + sizeof(int) + (sizeof(double) * 5);
 
 			char * data = new char[size];
-
+			std::cout << "player ID: " << std::to_string(m_gameID);
 			*(int*)data = code;
-			(*(int*)(data + sizeof(int))) = m_ship->getShipNetworkStats().player;
+			(*(int*)(data + sizeof(int))) = m_gameID;
 			(*(double*)(data + sizeof(int) + sizeof(int))) = m_ship->getShipNetworkStats().posx;
 			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 1))) = m_ship->getShipNetworkStats().posy;
 			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 2))) = m_ship->getShipNetworkStats().speed;
 			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 3))) = m_ship->getShipNetworkStats().vx;
 			(*(double*)(data + sizeof(int) + sizeof(int) + (sizeof(double) * 4))) = m_ship->getShipNetworkStats().vy;
 
-
-
 			//PlayerStats stats = m_ship->getShipNetworkStats();
 			sendto(m_socket_d, data, size, 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 			delete data;
 			break;
 		}
-	case POSITION_BULLET:
+	case SHOOT_BULLET:
 		break;
 	default:
 		break;

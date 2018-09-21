@@ -50,6 +50,9 @@ private:
 	int m_socket_d;
 	struct sockaddr_in m_server_addr;	// my address information
 
+	Controller * m_controller;
+	Room * m_room;
+
 	std::vector<ClientAddr> m_clientList;
 
 	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> m_playerList = std::make_shared<std::vector<std::shared_ptr<PlayerDetails>>>();

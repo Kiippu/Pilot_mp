@@ -89,8 +89,11 @@ bool Ship::update(Model & m_model, double deltat)
 	{
 		doAI(m_model, controlthrust, controlleft, controlright, controlfire);
 	}
-	// may be another mode here that controls nodes from information
-	// received over the network?
+	// network input players
+	if (mode == NETWORKPLAYER)
+	{
+
+	}
 
 	accx += controlthrust * thrust * -sin(direction);
 	accy += controlthrust * thrust * cos(direction);

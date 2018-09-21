@@ -24,6 +24,8 @@ private:
 
 	int m_gameID = -1;
 
+	std::string m_usersName = "no_name";
+
 	Ship * m_ship = nullptr;
 
 

@@ -30,12 +30,15 @@ private:
 	// the current target.
 	Ship * target;
 
+	// reference to world
+	 
+
 	double score;
 
 	bool thruston;
 
 public:
-	enum ActorTypes { INPLAY, AUTO, RECOVERY };
+	enum ActorTypes { INPLAY, AUTO, RECOVERY, NETWORKPLAYER };
 
 	Ship(Controller & cntrller, int initmode, std::string name);
 	virtual ~Ship(void);
@@ -51,6 +54,9 @@ public:
 
 	// simple control routine.
 	void doAI(Model & m_model, double & controlthrust, double & controlleft, double & controlright, double & controlfire);
+
+	// update network players
+	void UpdateNetworkPlayer();
 
 	// return current score
 	double getScore();
