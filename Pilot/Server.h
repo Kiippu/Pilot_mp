@@ -66,7 +66,8 @@ private:
 	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> m_playerList = std::make_shared<std::vector<std::shared_ptr<PlayerDetails>>>();
 
 	std::shared_ptr<Room> m_model = std::make_shared<Room>(-400, 400, 100, -500);
-	
+
+	bool m_isServer = false;
 
 	Server() {};
 
@@ -83,10 +84,14 @@ public:
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);
 
+	// add player to severs stack
 	void addPlayer( NewPlayer & np);
 
 	//get current server player details
 	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> & getPlayerDetails() { return  m_playerList; }
+
+	// is this actively a server
+	bool isServer() { return m_isServer; }
 
 };
 

@@ -25,7 +25,8 @@ void Server::InitServer(char * ipAddress)
 	{
 		m_ipAddress = INADDR_ANY;
 	}
-	
+
+	m_isServer = true;
 
 	QuickDraw window;
 	View & view = (View &)window;
@@ -128,7 +129,13 @@ void Server::InitServer(char * ipAddress)
 			int addr = m_clientList[i].ip;
 			int port = m_clientList[i].port;
 			int modelsize;
-			char * modeldata = serialize(WORLDUPDATE, modelsize);
+			char * modeldata;
+			if (m_playerList->size() > 0)
+			{
+				modeldata = serialize(WORLDUPDATE, modelsize);
+			}
+			else
+				modeldata = serialize(NO_PLAYERS, modelsize);
 			struct sockaddr_in dest_addr;
 			dest_addr.sin_family = AF_INET;
 			dest_addr.sin_addr.s_addr = addr;
@@ -169,41 +176,64 @@ void Server::InitServer(char * ipAddress)
 
 char * Server::serialize(int code, int & size)
 {
-	//EXAMPLE FROM BATTLEMULTI.sln
-	//// used to turn game datain to bytes and send as packets
-	//
-	//int elementsize = sizeof(double) + sizeof(int) + sizeof(double);
-	//size = sizeof(int) + sx * sy * elementsize;
 
-	//char * data = new char[size];
-	//*(int *)data = code;
-	//for (int x = 0; x < sx; x++)
-	//{
-	//	for (int y = 0; y < sy; y++)
-	//	{
-	//		(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize)) = (*environment[y * sx + x]).content;
-	//		(*(int*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double))) = (*environment[y * sx + x]).owner;
-	//		(*(double*)(data + sizeof(int) + (y * sx + x) * elementsize + sizeof(double) + sizeof(int))) = (*environment[y * sx + x]).production;
-	//	}
-	//}
-	//return data;
-
-	////
-
-	int elementSize = -1;
 	char * data;
 
 	switch (code)
 	{
-	case ALIVE:
-		data = new char[1];
+	case CREATE_ROOM: {
+
+		int modelsize = sizeof(int) * 5;
+		data = new char[size];
+
+		// chnage variables into server vars not hardcoded
+		*(int *)data = code;
+		(*(int*)(data + sizeof(int))) = -400;
+		(*(int*)(data + (sizeof(int) * 2))) = 400;
+		(*(int*)(data + (sizeof(int) * 3))) = 100;
+		(*(int*)(data + (sizeof(int) * 3))) = -500;
+
+		for (unsigned int i = 0; i < m_clientList.size(); i++)
+		{
+			// Send environment updates to clients.
+			int addr = m_clientList[i].ip;
+			int port = m_clientList[i].port;
+			struct sockaddr_in dest_addr;
+			dest_addr.sin_family = AF_INET;
+			dest_addr.sin_addr.s_addr = addr;
+			dest_addr.sin_port = port;
+			
+			sendto(m_socket_d, data, modelsize, 0, (const sockaddr *) &(dest_addr), sizeof(dest_addr));
+
+		}
+
+		delete[] data;
+		std::cout << "CREATE_ROOM" << std::endl;
 		break;
-	case WORLDUPDATE: {
-		size = sizeof(MESSAGECODES); //+elementsize;
+	}
+	case NO_PLAYERS: {
+		size = sizeof(int);
 		data = new char[size];
 		*(int *)data = code;
+		break;
+	}
+	case WORLDUPDATE: {
 
+		int elementSize = (sizeof(int) + sizeof(int) + ((sizeof(bool) * 4)));
+		size = elementSize * m_playerList->size();
 
+		data = new char[size];
+
+		*(int *)data = code;
+		(*(int*)(data + sizeof(int))) = m_playerList->size();
+		for (size_t i = 0; i < m_playerList->size(); i++)
+		{
+			(*(int*)(data + (sizeof(int) *2 ) + (elementSize * i))) = m_playerList->at(i)->m_playerGameID;
+			(*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (elementSize * i))) = m_playerList->at(i)->forward;
+			(*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 1) + (elementSize * i))) = m_playerList->at(i)->left;
+			(*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 2) + (elementSize * i))) = m_playerList->at(i)->right;
+			(*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 3) + (elementSize * i))) = m_playerList->at(i)->fire;
+		}
 
 		break;
 	}
@@ -230,9 +260,12 @@ void Server::deserialize(char * data, int size)
 		addPlayer(*(NewPlayer*)(data));
 		break;
 	}
-	case ALIVE:
+	case ALIVE: {
 		std::cout << " MESSAGE: ALIVE" << std::endl;
+		int size = (sizeof(int) * 5);
+		serialize(CREATE_ROOM, size);
 		break;
+	}
 	case PLAYER_MOVEMENT: {
 
 		int playerID = (*(int*)(data + (sizeof(int))));

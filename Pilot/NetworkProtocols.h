@@ -15,7 +15,8 @@ enum MESSAGECODES {
 	NEW_PLAYER,
 	SHOOT_BULLET,
 	PLAYER_MOVEMENT,
-	CREATE_ROOM
+	CREATE_ROOM,
+	NO_PLAYERS
 };
 
 /***********************************************************************
@@ -38,6 +39,7 @@ public:
 
 class CreateRoom
 {
+public:
 	int left;
 	int right;
 	int top;
@@ -95,6 +97,7 @@ public:
 	bool fire = false;
 
 	PlayerMovement(int p) : action(PLAYER_MOVEMENT), player(p) {}
+	PlayerMovement() {}
 };
 
 // A player update to the server:  player state

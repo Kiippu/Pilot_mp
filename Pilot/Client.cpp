@@ -26,10 +26,14 @@ void Client::Initclient(char * serverIP, char * clientID)
 	View & view = (View &)window;
 	Controller & controller = (Controller &)window;
 
+	m_controller = &controller;
+
+	m_isClient = true;
+
 	/// game enviroment
-	Room m_model(-400, 400, 100, -500);
-	m_ship = new Ship(controller, Ship::INPLAY, m_usersName, (int)(*clientID - '0'));
-	m_model.addActor(m_ship);
+	//Room m_model(-400, 400, 100, -500);
+	//m_ship = new Ship(controller, Ship::INPLAY, m_usersName, (int)(*clientID - '0'));
+	//m_model.addActor(m_ship);
 
 	m_networkMovement = new PlayerMovement((int)(*clientID - '0'));
 
@@ -80,10 +84,6 @@ void Client::Initclient(char * serverIP, char * clientID)
 	serialize(ALIVE);
 	//sendto(m_socket_d, (const char *)&aliveMsg, sizeof(aliveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 
-	// add this client as an active player on the server.
-	serialize(NEW_PLAYER);
-
-
 	// Very similar to the single player version - spot the difference.
 	while (true)
 	{
@@ -125,29 +125,31 @@ void Client::Initclient(char * serverIP, char * clientID)
 		//m_model.display(view, offsetx, offsety, scale, player);
 		//view.swapBuffer();
 
+		if (m_roomReady && m_model != nullptr)
+		{
+			// Allow the environment to update.
+			//m_model.update(deltat);
+			m_model->update(0.016);
 
-		// Allow the environment to update.
-		//m_model.update(deltat);
-		m_model.update(0.016);
+			std::cout << "DT: " << std::to_string(deltat) << std::endl;
 
-		std::cout << "DT: " << std::to_string(deltat) << std::endl;
+			// Schedule a screen update event.
+			view.clearScreen();
+			double offsetx = 0.0;
+			double offsety = 0.0;
+			(*m_ship).getPosition(offsetx, offsety);
+			m_model->display(view, offsetx, offsety, scale);
 
-		// Schedule a screen update event.
-		view.clearScreen();
-		double offsetx = 0.0;
-		double offsety = 0.0;
-		(*m_ship).getPosition(offsetx, offsety);
-		m_model.display(view, offsetx, offsety, scale);
+			std::ostringstream score;
+			score << "Score: " << m_ship->getScore();
+			view.drawText(20, 20, score.str());
+			view.swapBuffer();
 
-		std::ostringstream score;
-		score << "Score: " << m_ship->getScore();
-		view.drawText(20, 20, score.str());
-		view.swapBuffer();
-
-		// send current data to server after revieving current game state
-		//PlayerStats stats(player);
-		//sendto(m_socket_d, (const char *)&stats, sizeof(stats), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
-		//serialize(PLAYER_STATS);
+			// send current data to server after revieving current game state
+			//PlayerStats stats(player);
+			//sendto(m_socket_d, (const char *)&stats, sizeof(stats), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+			//serialize(PLAYER_STATS);
+		}
 	}
 }
 
@@ -225,11 +227,54 @@ void Client::deserialize(char * data, int size)
 
 	switch (msgType)
 	{
-	case WORLDUPDATE:
-		//std::cout << "CLIENT RECIEVED - MESSAGE: WORLDUPDATE" << std::endl;
+	case CREATE_ROOM: {
+		if (m_model == nullptr)
+		{
+
+
+			std::cout << "client - CREATE_ROOM" << std::endl;
+			int left =		(*(int*)(data + (sizeof(int) * 1)));
+			int right =		(*(int*)(data + (sizeof(int) * 2)));
+			int top =		(*(int*)(data + (sizeof(int) * 3)));
+			int bottom =	(*(int*)(data + (sizeof(int) * 3)));
+
+			m_model = new Room(left, right, top, bottom);
+
+			std::cout << "Right = " << std::to_string(right) << " -- Left = " << std::to_string(left) << " -- top = " << std::to_string(top) << " -- bottom = " << std::to_string(bottom) << std::endl;
+			
+			// add this client as an active player on the server.
+			serialize(NEW_PLAYER);
+
+			// add ship to client enviroment
+			m_ship = new Ship(*m_controller, Ship::NETWORKPLAYER, m_usersName, m_gameID);
+			m_model->addActor(m_ship);
+
+			m_roomReady = true;
+		}
+
 		break;
+	}
+	case WORLDUPDATE: {
+		//std::cout << "CLIENT RECIEVED - MESSAGE: WORLDUPDATE" << std::endl;
+		int elementSize = (sizeof(int) + sizeof(int) + ((sizeof(bool) * 4)));
+		size_t arraySize = (*(int*)(data + sizeof(int)));
+		m_serverPlayerState.resize(arraySize);
+		for (size_t i = 0; i < arraySize; i++)
+		{
+			PlayerMovement temp((*(int*)(data + (sizeof(int) * 2) + (elementSize * i))));
+			m_serverPlayerState[i] = temp;
+			m_serverPlayerState[i].forward = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (elementSize * i)));
+			m_serverPlayerState[i].left = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 1) + (elementSize * i)));
+			m_serverPlayerState[i].right = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 2) + (elementSize * i)));
+			m_serverPlayerState[i].fire = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 3) + (elementSize * i)));
+		}
+
+		break;
+	}
+	case NO_PLAYERS:
+		std::cout << "CLIENT RECIEVED - MESSAGE: NO_PLAYERS" << std::endl;
 	default:
-		//std::cout << "CLIENT RECIEVED -  MESSAGE: DEFAULT = " << std::to_string(msgType) << std::endl;
+		std::cout << "CLIENT RECIEVED -  ERROR MSG = " << std::to_string(msgType) << std::endl;
 		break;
 	}
 

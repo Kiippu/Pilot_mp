@@ -57,8 +57,10 @@ bool Ship::update(Model & m_model, double deltat)
 	double controlright = 0.0;
 	double controlfire = 0.0;
 
-	if (mode == INPLAY) // human controlled
+	// vheck if the svtive user is a client
+	if (Client::getInstance().isClient()) // human controlled
 	{
+		std::cout << "isClient" << std::endl;
 		//char c = controller.lastKey ();
 		//switch (c)
 		//{
@@ -72,29 +74,33 @@ bool Ship::update(Model & m_model, double deltat)
 		//}
 		if (controller.isActive('W'))
 		{
-			controlthrust = 1.0;
+			//controlthrust = 1.0;
 			Client::getInstance().m_networkMovement->forward = true;
+			std::cout << "W" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->forward = false;
 		if (controller.isActive('A'))
 		{
-			controlleft = 1.0;
+			//controlleft = 1.0;
 			Client::getInstance().m_networkMovement->left = true;
+			std::cout << "A" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->left = false;
 		if (controller.isActive('D'))
 		{
-			controlright = 1.0;
+			//controlright = 1.0;
 			Client::getInstance().m_networkMovement->right = true;
+			std::cout << "D" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->right = false;
 		if (controller.isActive(VK_SPACE))
 		{
-			controlfire = 1.0;
+			//controlfire = 1.0;
 			Client::getInstance().m_networkMovement->fire = true;
+			std::cout << "FIRE" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->fire = false;

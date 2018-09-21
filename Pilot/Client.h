@@ -2,8 +2,12 @@
 #ifndef CLIENT
 #define CLIENT
 
+#include <vector>
+
 class Ship;
 class PlayerMovement;
+class Room;
+class Controller;
 
 class Client
 {
@@ -30,6 +34,15 @@ private:
 
 	Ship * m_ship = nullptr;
 
+	bool m_roomReady = false;
+
+	Room * m_model = nullptr;
+
+	Controller * m_controller = nullptr;
+
+	std::vector<PlayerMovement> m_serverPlayerState;
+
+	bool m_isClient = false;
 
 	Client() {};
 
@@ -46,7 +59,11 @@ public:
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);
 
+	//is this actively a client
+	bool isClient() { return m_isClient; }
+
 	PlayerMovement * m_networkMovement;
+
 };
 
 
