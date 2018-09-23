@@ -60,7 +60,7 @@ bool Ship::update(Model & m_model, double deltat)
 	// vheck if the svtive user is a client
 	if (Client::getInstance().isClient()) // human controlled
 	{
-		std::cout << "isClient" << std::endl;
+		//std::cout << "isClient" << std::endl;
 		//char c = controller.lastKey ();
 		//switch (c)
 		//{
@@ -76,7 +76,6 @@ bool Ship::update(Model & m_model, double deltat)
 		{
 			//controlthrust = 1.0;
 			Client::getInstance().m_networkMovement->forward = true;
-			std::cout << "W" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->forward = false;
@@ -84,7 +83,6 @@ bool Ship::update(Model & m_model, double deltat)
 		{
 			//controlleft = 1.0;
 			Client::getInstance().m_networkMovement->left = true;
-			std::cout << "A" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->left = false;
@@ -92,7 +90,6 @@ bool Ship::update(Model & m_model, double deltat)
 		{
 			//controlright = 1.0;
 			Client::getInstance().m_networkMovement->right = true;
-			std::cout << "D" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->right = false;
@@ -100,7 +97,6 @@ bool Ship::update(Model & m_model, double deltat)
 		{
 			//controlfire = 1.0;
 			Client::getInstance().m_networkMovement->fire = true;
-			std::cout << "FIRE" << std::endl;
 		}
 		else
 			Client::getInstance().m_networkMovement->fire = false;
@@ -113,6 +109,7 @@ bool Ship::update(Model & m_model, double deltat)
 	// network input players
 	if (mode == NETWORKPLAYER)
 	{
+		//std::cout << "mode == NETWORKPLAYER" << std::endl;
 		UpdateNetworkPlayer(controlthrust, controlleft, controlright, controlfire);
 	}
 
@@ -303,20 +300,44 @@ void Ship::doAI(Model & m_model, double & controlthrust, double & controlleft, d
 
 void Ship::UpdateNetworkPlayer(double & controlthrust, double & controlleft, double & controlright, double & controlfire)
 {
-	size_t size = Server::getInstance().getPlayerDetails()->size();
-	auto list = Server::getInstance().getPlayerDetails();
+	size_t size = 0;
+
+	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> list;
+
+	if (Server::getInstance().isServer()) {
+		list = Server::getInstance().getPlayerDetails();
+		size = Server::getInstance().getPlayerDetails()->size();
+	}
+	if (Client::getInstance().isClient()) {
+		list = Client::getInstance().getPlayerDetails();
+		size = Client::getInstance().getPlayerDetails()->size();
+		//std::cout << "getPlayerDetails.size() = " << std::to_string(list->size()) << std::endl;
+	}
+
 	for (size_t i = 0; i < size; i++)
 	{
-		if (list->at(i)->m_playerGameID == m_playerID)
+
+		//std::cout << "m_playerID == " << std::to_string(m_playerID) << "  ---  list->at(i)->getID() == " << std::to_string(list->at(i)->getID()) << std::endl;
+		if (list->at(i)->getID() == m_playerID)
 		{
-			if (list->at(i)->forward)
+			//std::cout << "list->at(i)->getID() == m_playerID" << std::endl;
+
+			if (list->at(i)->forward) {
 				controlthrust = 1.0;
-			if (list->at(i)->left)
+				std::cout << "forward!!!!" << std::endl;
+			}
+			if (list->at(i)->left) {
 				controlleft = 1.0;
-			if (list->at(i)->right)
+				std::cout << "left!!!!" << std::endl;
+			}
+			if (list->at(i)->right) {
 				controlright = 1.0;
-			if (list->at(i)->fire)
+				std::cout << "right!!!!" << std::endl;
+			}
+			if (list->at(i)->fire) {
 				controlfire = 1.0;
+				std::cout << "fire!!!!" << std::endl;
+			}
 		}
 	}
 }

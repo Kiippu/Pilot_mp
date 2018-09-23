@@ -26,6 +26,7 @@ void Server::InitServer(char * ipAddress)
 		m_ipAddress = INADDR_ANY;
 	}
 
+
 	m_isServer = true;
 
 	QuickDraw window;
@@ -48,7 +49,8 @@ void Server::InitServer(char * ipAddress)
 
 	m_server_addr.sin_family = AF_INET;		 // host byte order
 	m_server_addr.sin_port = htons(m_portNum); // short, network byte order
-	inet_pton(AF_INET, m_ipAddress, &m_server_addr.sin_addr.s_addr);
+	//inet_pton(AF_INET, m_ipAddress, &m_server_addr.sin_addr.s_addr);
+	inet_pton(AF_INET, "127.0.0.1", &m_server_addr.sin_addr.s_addr);
 	memset(&(m_server_addr.sin_zero), '\0', 8); // zero the rest of the struct
 
 	if (bind(m_socket_d, (struct sockaddr *) &m_server_addr, sizeof(struct sockaddr)) == -1)
@@ -79,8 +81,8 @@ void Server::InitServer(char * ipAddress)
 		lasttime = lasttime + deltat;
 
 		// Update the m_model - the representation of the game environment.
-		//m_model->update(deltat);
-		m_model->update(0.016);
+		m_model->update(deltat);
+		//m_model->update(0.016);
 
 		struct sockaddr_in aClientsAddress; // connector's address information
 		int addr_len = sizeof(struct sockaddr);
@@ -158,7 +160,7 @@ void Server::InitServer(char * ipAddress)
 		// Allow the environment to update.
 		m_model->update(deltat);
 
-		std::cout << "DT: " << std::to_string(deltat) << std::endl;
+		//std::cout << "DT: " << std::to_string(deltat) << std::endl;
 
 		// Schedule a screen update event.
 		view.clearScreen();
@@ -188,10 +190,10 @@ char * Server::serialize(int code, int & size)
 
 		// chnage variables into server vars not hardcoded
 		*(int *)data = code;
-		(*(int*)(data + sizeof(int))) = -400;
+		(*(int*)(data + (sizeof(int) * 1))) = -400;
 		(*(int*)(data + (sizeof(int) * 2))) = 400;
 		(*(int*)(data + (sizeof(int) * 3))) = 100;
-		(*(int*)(data + (sizeof(int) * 3))) = -500;
+		(*(int*)(data + (sizeof(int) * 4))) = -500;
 
 		for (unsigned int i = 0; i < m_clientList.size(); i++)
 		{
@@ -219,7 +221,7 @@ char * Server::serialize(int code, int & size)
 	}
 	case WORLDUPDATE: {
 
-		int elementSize = (sizeof(int) + sizeof(int) + ((sizeof(bool) * 4)));
+		int elementSize = (sizeof(int) * 3) + ((sizeof(bool) * 4));// +sizeof(std::string);
 		size = elementSize * m_playerList->size();
 
 		data = new char[size];
@@ -233,6 +235,8 @@ char * Server::serialize(int code, int & size)
 			(*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 1) + (elementSize * i))) = m_playerList->at(i)->left;
 			(*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 2) + (elementSize * i))) = m_playerList->at(i)->right;
 			(*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 3) + (elementSize * i))) = m_playerList->at(i)->fire;
+
+			//(*(std::string*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 4) + (elementSize * i))) = m_playerList->at(i)->m_playerName;
 		}
 
 		break;
@@ -268,6 +272,7 @@ void Server::deserialize(char * data, int size)
 	}
 	case PLAYER_MOVEMENT: {
 
+		//std::cout << "PLAYER_MOVEMENT";
 		int playerID = (*(int*)(data + (sizeof(int))));
 		for (size_t i = 0; i < m_playerList->size(); i++)
 		{

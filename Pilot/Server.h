@@ -16,30 +16,6 @@ struct ClientAddr
 	ClientAddr(int IP, int PORT) : ip(IP), port(PORT) {}
 };
 
-struct PlayerDetails
-{
-	int m_playerGameID;
-	std::string m_playerName;
-
-	// Position of the actor.
-	double posx;
-	double posy;
-
-	// Magnitude of velocity.
-	double speed;
-	// Unit velocity vector.
-	double vx;
-	double vy;
-
-	//current movement states
-	bool forward;
-	bool left;
-	bool right;
-
-	// shoot state
-	bool fire;
-};
-
 class Server
 {
 public:

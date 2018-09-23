@@ -8,6 +8,7 @@ class Ship;
 class PlayerMovement;
 class Room;
 class Controller;
+class PlayerDetails;
 
 class Client
 {
@@ -44,6 +45,8 @@ private:
 
 	bool m_isClient = false;
 
+	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> m_playerList = std::make_shared<std::vector<std::shared_ptr<PlayerDetails>>>();
+
 	Client() {};
 
 public:
@@ -58,6 +61,9 @@ public:
 
 	// deserialize the environment from a block.
 	void deserialize(char * data, int size);
+
+	//get current server player details
+	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> & getPlayerDetails() { return  m_playerList; }
 
 	//is this actively a client
 	bool isClient() { return m_isClient; }

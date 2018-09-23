@@ -27,6 +27,35 @@ enum MESSAGECODES {
 
 /// TODO: make all message classes!
 
+
+class PlayerDetails
+{
+public:
+	int m_playerGameID;
+	std::string m_playerName;
+
+	// Position of the actor.
+	double posx;
+	double posy;
+
+	// Magnitude of velocity.
+	double speed;
+	// Unit velocity vector.
+	double vx;
+	double vy;
+
+	//current movement states
+	bool forward;
+	bool left;
+	bool right;
+
+	// shoot state
+	bool fire;
+
+	int const getID() { return m_playerGameID; };
+};
+
+
 // Message objects. All must have a message code as the first integer and playerID as the second.
 class Alive
 {
