@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Room.h"
+#include <mutex>
 
 class NewPlayer;
 
@@ -37,7 +38,10 @@ private:
 	Controller * m_controller;
 	Room * m_room;
 
+
+	
 	std::vector<ClientAddr> m_clientList;
+	std::mutex m_clientList_mutex;
 
 	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> m_playerList = std::make_shared<std::vector<std::shared_ptr<PlayerDetails>>>();
 
@@ -69,6 +73,7 @@ public:
 	// is this actively a server
 	bool isServer() { return m_isServer; }
 
+	void clientHandler();
 };
 
 

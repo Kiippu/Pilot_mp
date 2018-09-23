@@ -3,12 +3,15 @@
 #define CLIENT
 
 #include <vector>
+#include <mutex>
 
+// Forward declaration
 class Ship;
 class PlayerMovement;
 class Room;
 class Controller;
 class PlayerDetails;
+class NewPlayer;
 
 class Client
 {
@@ -42,10 +45,13 @@ private:
 	Controller * m_controller = nullptr;
 
 	std::vector<PlayerMovement> m_serverPlayerState;
+	std::mutex m_serverPlayerState_mutex;
 
 	bool m_isClient = false;
 
 	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> m_playerList = std::make_shared<std::vector<std::shared_ptr<PlayerDetails>>>();
+
+	void networkHandler();
 
 	Client() {};
 
@@ -64,6 +70,9 @@ public:
 
 	//get current server player details
 	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> & getPlayerDetails() { return  m_playerList; }
+
+	// add player to severs stack
+	void addPlayer(NewPlayer & np);
 
 	//is this actively a client
 	bool isClient() { return m_isClient; }

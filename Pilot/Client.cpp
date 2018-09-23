@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <ws2tcpip.h>
 #include <sstream>
+#include <thread>
+#include <mutex>
 
 
 #include "Client.h"
@@ -16,6 +18,33 @@
 
 
 const int gamePort = 33303;
+
+void Client::networkHandler()
+{
+	while (true)
+	{
+		// Check for updates from the server.
+		int addr_len = sizeof(struct sockaddr);
+		char buf[50000];
+		int numbytes = 50000;
+		int n;
+
+		// Receive requests from server.
+		if ((n = recvfrom(m_socket_d, buf, numbytes, 0, (struct sockaddr *)&m_server_addr, &addr_len)) == -1)
+		{
+			std::cout << "Nothing recevied..." << "\n";
+			if (WSAGetLastError() != WSAEWOULDBLOCK) // A real problem - not just avoiding blocking.
+			{
+				std::cerr << "Recv error: " << WSAGetLastError() << "\n";
+			}
+		}
+		else
+		{
+			/// get incomming data and sendit to the clients enviroment
+			deserialize(buf, n);
+		}
+	}
+}
 
 void Client::Initclient(char * serverIP, char * clientID)
 {
@@ -84,6 +113,8 @@ void Client::Initclient(char * serverIP, char * clientID)
 	serialize(ALIVE);
 	//sendto(m_socket_d, (const char *)&aliveMsg, sizeof(aliveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 
+	std::thread networkUpdates(&Client::networkHandler, this);
+
 	// Very similar to the single player version - spot the difference.
 	while (true)
 	{
@@ -97,28 +128,6 @@ void Client::Initclient(char * serverIP, char * clientID)
 		avgdeltat = 0.2 * deltat + 0.8 * avgdeltat;
 		deltat = avgdeltat;
 		lasttime = lasttime + deltat;
-
-		// Check for updates from the server.
-		int addr_len = sizeof(struct sockaddr);
-		char buf[50000];
-		int numbytes = 50000;
-		int n;
-
-		// Receive requests from server.
-		if ((n = recvfrom(m_socket_d, buf, numbytes, 0, (struct sockaddr *)&m_server_addr, &addr_len)) == -1)
-		{
-			std::cout << "Nothing recevied..." << "\n";
-			if (WSAGetLastError() != WSAEWOULDBLOCK) // A real problem - not just avoiding blocking.
-			{
-				std::cerr << "Recv error: " << WSAGetLastError() << "\n";
-			}
-		}
-		else
-		{
-			/// get incomming data and sendit to the clients enviroment
-			deserialize(buf, n);
-
-		}
 
 		// Schedule a screen update event.
 		//view.clearScreen();
@@ -151,7 +160,7 @@ void Client::Initclient(char * serverIP, char * clientID)
 			//serialize(PLAYER_STATS);
 		}
 		else
-			std::cout << "m_roomReady == false or m_model == nullptr" << "                                 \r";
+			std::cout << "m_roomReady == false or m_model == nullptr" << std::endl;
 	}
 }
 
@@ -229,11 +238,15 @@ void Client::deserialize(char * data, int size)
 
 	switch (msgType)
 	{
+	case NEW_PLAYER:
+		if ((*(NewPlayer*)(data)).m_playerID != m_gameID)
+		{
+			addPlayer(*(NewPlayer*)(data));
+		}
+		break;
 	case CREATE_ROOM: {
 		if (m_model == nullptr)
 		{
-
-
 			std::cout << "client - CREATE_ROOM" << std::endl;
 			int left =		(*(int*)(data + (sizeof(int) * 1)));
 			int right =		(*(int*)(data + (sizeof(int) * 2)));
@@ -242,7 +255,7 @@ void Client::deserialize(char * data, int size)
 
 			m_model = new Room(left, right, top, bottom);
 
-			std::cout << "Right = " << std::to_string(right) << " -- Left = " << std::to_string(left) << " -- top = " << std::to_string(top) << " -- bottom = " << std::to_string(bottom) << std::endl;
+			//std::cout << "Right = " << std::to_string(right) << " -- Left = " << std::to_string(left) << " -- top = " << std::to_string(top) << " -- bottom = " << std::to_string(bottom) << std::endl;
 			
 			// add this client as an active player on the server.
 			serialize(NEW_PLAYER);
@@ -263,8 +276,8 @@ void Client::deserialize(char * data, int size)
 	}
 	case WORLDUPDATE: {
 
-		int elementSize = (sizeof(int) * 3) + ((sizeof(bool) * 4));// +sizeof(std::string);
-		size_t arraySize = (*(int*)(data + sizeof(int)));
+		int elementSize = (sizeof(int)) + ((sizeof(bool) * 4));// +sizeof(std::string);
+		//size_t arraySize = (*(int*)(data + sizeof(int)));
 
 		auto list = Client::getInstance().getPlayerDetails();
 
@@ -272,35 +285,40 @@ void Client::deserialize(char * data, int size)
 		{
 			//std::vector<Type> v = ....;
 			//std::string myString = ....;
-			int id = (*(int*)(data + (sizeof(int) * 2) + (elementSize * i)));
+			int id = (*(int*)(data + (sizeof(int)) + (elementSize * i)));
 			auto it = std::find_if(list->begin(), list->end(), [&id](std::shared_ptr<PlayerDetails> obj) {return obj->getID() == id; });
 
 			if (it != list->end())
 			{
 				auto index = std::distance(list->begin(), it);
 
-				list->at(index)->forward = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (elementSize * i)));
-				list->at(index)->left = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 1) + (elementSize * i)));
-				list->at(index)->right = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 2) + (elementSize * i)));
-				list->at(index)->fire = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 3) + (elementSize * i)));
+				list->at(index)->forward = (*(bool*)(data + (sizeof(int)) + sizeof(int) + (elementSize * i)));
+				list->at(index)->left = (*(bool*)(data + (sizeof(int)) + sizeof(int) + (sizeof(bool) * 1) + (elementSize * i)));
+				list->at(index)->right = (*(bool*)(data + (sizeof(int)) + sizeof(int) + (sizeof(bool) * 2) + (elementSize * i)));
+				list->at(index)->fire = (*(bool*)(data + (sizeof(int)) + sizeof(int) + (sizeof(bool) * 3) + (elementSize * i)));
 
 				//std::cout << "Forward: " << std::to_string(list->at(index)->forward) << "Left: " << std::to_string(list->at(index)->left) << "Right: " << std::to_string(list->at(index)->right) << "Fire: " << std::to_string(list->at(index)->fire) << std::endl;
 			}
-			else
-			{
-				std::shared_ptr<PlayerDetails> temp = std::make_shared<PlayerDetails>();
-				temp->forward = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (elementSize * i)));
-				temp->left = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 1) + (elementSize * i)));
-				temp->right = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 2) + (elementSize * i)));
-				temp->fire = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 3) + (elementSize * i)));
-					
-				temp->m_playerGameID = (*(int*)(data + (sizeof(int) * 2) + (elementSize * i)));
-				//temp->m_playerName = (*(std::string*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 4) + (elementSize * i)));
+			////else
+			//{
+			//	std::shared_ptr<PlayerDetails> temp = std::make_shared<PlayerDetails>();
+			//	temp->forward = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (elementSize * i)));
+			//	temp->left = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 1) + (elementSize * i)));
+			//	temp->right = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 2) + (elementSize * i)));
+			//	temp->fire = (*(bool*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 3) + (elementSize * i)));
+			//		
+			//	temp->m_playerGameID = (*(int*)(data + (sizeof(int) * 2) + (elementSize * i)));
+			//	//temp->m_playerName = (*(std::string*)(data + (sizeof(int) * 2) + sizeof(int) + (sizeof(bool) * 4) + (elementSize * i)));
 
-				list->push_back(temp);
-				std::cout << "Client - added new player!" << std::endl;
-			}
+			//	// add ship to enviroment
+			//	list->push_back(temp);
+			//	s = new Ship(*m_controller, Ship::NETWORKPLAYER, m_usersName, m_gameID);
+			//	m_model->addActor(m_ship);
+
+				//std::cout << "Client - added new player!" << std::endl;
+
 		}
+		//}
 
 
 		//m_serverPlayerState.resize(arraySize);
@@ -334,3 +352,21 @@ void Client::deserialize(char * data, int size)
 
 
 }
+
+
+void Client::addPlayer(NewPlayer & np)
+{
+	// add ship to server data
+	std::shared_ptr<PlayerDetails> newPlayer = std::make_shared<PlayerDetails>();
+	newPlayer->m_playerGameID = np.m_playerID;
+	newPlayer->m_playerName = np.m_playerName;
+
+	m_serverPlayerState_mutex.lock();
+	m_playerList->push_back(newPlayer);
+	m_serverPlayerState_mutex.unlock();
+
+	// add ship to enviroment
+	Ship * s = new Ship(*m_controller, Ship::NETWORKPLAYER, np.m_playerName, np.m_playerID);
+	m_model->addActor(s);
+}
+
