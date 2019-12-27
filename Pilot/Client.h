@@ -48,10 +48,20 @@ private:
 	std::mutex m_serverPlayerState_mutex;
 
 	bool m_isClient = false;
+	bool m_autoConnect = false;
+	double m_autoConnectTimer = 0;
+	double m_autoConnectTimerMax = 10.0;
+
+	double m_ping = 0.0;
+	double m_pingTimer = 0.0;
+	double m_pingTimerMax = 1.0;
+	bool m_registerPing = true;
 
 	std::shared_ptr<std::vector<std::shared_ptr<PlayerDetails>>> m_playerList = std::make_shared<std::vector<std::shared_ptr<PlayerDetails>>>();
 
 	void networkHandler();
+
+	int m_mutexBlockCounter = 0;
 
 	Client() {};
 

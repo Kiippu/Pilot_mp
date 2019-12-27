@@ -72,35 +72,81 @@ bool Ship::update(Model & m_model, double deltat)
 		//	// unknown key.
 		//	;
 		//}
+		PlayerMovement temp;
 		if (controller.isActive('W'))
 		{
 			//controlthrust = 1.0;
-			Client::getInstance().m_networkMovement->forward = true;
+			temp.forward = true;
+			//Client::getInstance().m_networkMovement->forward = true;
 		}
-		else
-			Client::getInstance().m_networkMovement->forward = false;
+		else {
+			//Client::getInstance().m_networkMovement->forward = false;
+			temp.forward = false;
+		}
 		if (controller.isActive('A'))
 		{
 			//controlleft = 1.0;
-			Client::getInstance().m_networkMovement->left = true;
+			temp.left = true;
+			//Client::getInstance().m_networkMovement->left = true;
 		}
-		else
-			Client::getInstance().m_networkMovement->left = false;
+		else {
+			//Client::getInstance().m_networkMovement->left = false;
+			temp.left = false;
+		}
 		if (controller.isActive('D'))
 		{
 			//controlright = 1.0;
-			Client::getInstance().m_networkMovement->right = true;
+			temp.right = true;
+			//Client::getInstance().m_networkMovement->right = true;
 		}
-		else
-			Client::getInstance().m_networkMovement->right = false;
+		else {
+			//Client::getInstance().m_networkMovement->right = false;
+			temp.right = false;
+
+		}
 		if (controller.isActive(VK_SPACE))
 		{
 			//controlfire = 1.0;
-			Client::getInstance().m_networkMovement->fire = true;
+			temp.fire = true;
+			//Client::getInstance().m_networkMovement->fire = true;
 		}
-		else
-			Client::getInstance().m_networkMovement->fire = false;
-		Client::getInstance().serialize(PLAYER_MOVEMENT);
+		else {
+			temp.fire = false;
+			//Client::getInstance().m_networkMovement->fire = false;
+		}
+		// check for change
+		if (temp.forward != Client::getInstance().m_networkMovement->forward)
+		{
+			Client::getInstance().m_networkMovement->forward = temp.forward;
+			Client::getInstance().m_networkMovement->left = temp.left;
+			Client::getInstance().m_networkMovement->right = temp.right;
+			Client::getInstance().m_networkMovement->fire = temp.fire;
+			Client::getInstance().serialize(PLAYER_MOVEMENT);
+		}
+		else if (temp.fire != Client::getInstance().m_networkMovement->fire)
+		{
+			Client::getInstance().m_networkMovement->forward = temp.forward;
+			Client::getInstance().m_networkMovement->left = temp.left;
+			Client::getInstance().m_networkMovement->right = temp.right;
+			Client::getInstance().m_networkMovement->fire = temp.fire;
+			Client::getInstance().serialize(PLAYER_MOVEMENT);
+		}
+		else if(temp.right != Client::getInstance().m_networkMovement->right)
+		{
+			Client::getInstance().m_networkMovement->forward = temp.forward;
+			Client::getInstance().m_networkMovement->left = temp.left;
+			Client::getInstance().m_networkMovement->right = temp.right;
+			Client::getInstance().m_networkMovement->fire = temp.fire;
+			Client::getInstance().serialize(PLAYER_MOVEMENT);
+		}
+		else if (temp.left != Client::getInstance().m_networkMovement->left)
+		{
+			Client::getInstance().m_networkMovement->forward = temp.forward;
+			Client::getInstance().m_networkMovement->left = temp.left;
+			Client::getInstance().m_networkMovement->right = temp.right;
+			Client::getInstance().m_networkMovement->fire = temp.fire;
+			Client::getInstance().serialize(PLAYER_MOVEMENT);
+		}
 	}
 	if (mode == AUTO) // AI! controlled.
 	{
@@ -324,19 +370,19 @@ void Ship::UpdateNetworkPlayer(double & controlthrust, double & controlleft, dou
 
 			if (list->at(i)->forward) {
 				controlthrust = 1.0;
-				std::cout << "forward!!!!" << std::endl;
+				//std::cout << "forward!!!!" << std::endl;
 			}
 			if (list->at(i)->left) {
 				controlleft = 1.0;
-				std::cout << "left!!!!" << std::endl;
+				//std::cout << "left!!!!" << std::endl;
 			}
 			if (list->at(i)->right) {
 				controlright = 1.0;
-				std::cout << "right!!!!" << std::endl;
+				///std::cout << "right!!!!" << std::endl;
 			}
 			if (list->at(i)->fire) {
 				controlfire = 1.0;
-				std::cout << "fire!!!!" << std::endl;
+				//std::cout << "fire!!!!" << std::endl;
 			}
 		}
 	}

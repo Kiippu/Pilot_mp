@@ -16,7 +16,9 @@ enum MESSAGECODES {
 	SHOOT_BULLET,
 	PLAYER_MOVEMENT,
 	CREATE_ROOM,
-	NO_PLAYERS
+	NO_PLAYERS,
+	MATCH_FULL,
+	PING
 };
 
 /***********************************************************************
@@ -54,6 +56,15 @@ public:
 	int player;
 
 	Alive(int p) : action(ALIVE), player(p) {}
+};
+
+class Ping 
+{
+public:
+	int action;
+	int player;
+
+	Ping(int p) : action(PING), player(p) {}
 };
 
 class CreateRoom

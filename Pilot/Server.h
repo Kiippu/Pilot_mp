@@ -49,7 +49,16 @@ private:
 
 	bool m_isServer = false;
 
+	 USHORT m_maxClients = 15;
+
 	Server() {};
+
+	void sendNetworkDataInThread(ClientAddr address);
+
+	int m_mutexBlockCounter = 0;
+
+	int m_packetLoss = 0;
+	int m_packetTotal = 0;
 
 public:
 	Server(Server const&) = delete;

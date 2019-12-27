@@ -32,7 +32,7 @@ void Client::networkHandler()
 		// Receive requests from server.
 		if ((n = recvfrom(m_socket_d, buf, numbytes, 0, (struct sockaddr *)&m_server_addr, &addr_len)) == -1)
 		{
-			std::cout << "Nothing recevied..." << "\n";
+			//std::cout << "Nothing recevied..." << "\n";
 			if (WSAGetLastError() != WSAEWOULDBLOCK) // A real problem - not just avoiding blocking.
 			{
 				std::cerr << "Recv error: " << WSAGetLastError() << "\n";
@@ -107,7 +107,7 @@ void Client::Initclient(char * serverIP, char * clientID)
 	inet_pton(AF_INET, serverIP, &m_server_addr.sin_addr.s_addr);
 	m_server_addr.sin_port = htons(gamePort);
 
-
+	std::cout << std::to_string(m_server_addr.sin_port);
 	// Send a welcome message to server saying this client is 'alive'
 	// Will get this client added to server list...
 	serialize(ALIVE);
@@ -158,6 +158,35 @@ void Client::Initclient(char * serverIP, char * clientID)
 			//PlayerStats stats(player);
 			//sendto(m_socket_d, (const char *)&stats, sizeof(stats), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 			//serialize(PLAYER_STATS);
+
+			m_ping += deltat;
+			m_pingTimer += deltat;;
+
+			if (m_pingTimer > m_pingTimerMax && m_registerPing == true)
+			{
+				serialize(PING);
+				m_pingTimer = 0.0;
+			}
+			if (m_pingTimer > (m_pingTimerMax + 5.0))
+			{
+				serialize(PING);
+				m_pingTimer = 0.0;
+				std::cout << "m_ping failed to return sending again: " << std::endl;
+			}
+		}
+		else if (m_autoConnect == true)
+		{
+			//increments timer
+			m_autoConnectTimer += deltat;
+			std::cout << "Attempting connection to a server match..." << std::endl;
+			// checks if it is tiem to request server play again
+			if (m_autoConnectTimer > m_autoConnectTimerMax)
+			{
+				//sends original newplayer message agin
+				serialize(NEW_PLAYER);
+				// resets timer
+				m_autoConnectTimer = 0;
+			}
 		}
 		else
 			std::cout << "m_roomReady == false or m_model == nullptr" << std::endl;
@@ -170,9 +199,23 @@ void Client::serialize(int code)
 {
 	switch (code)
 	{
+	case PING: {
+		Ping pingMsg(m_gameID);
+		m_ping = 0.0;
+		int n = sendto(m_socket_d, (const char *)&pingMsg, sizeof(pingMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+		if (n == -1)
+		{
+			std::cout << "<<ERROR>> ping msg failed to send!" << std::endl;
+		}
+		else {
+			std::cout << "sent PING msg!!" << std::endl;
+			m_registerPing = false;
+		}
+		break;
+	}
 	case ALIVE: {
 		Alive aliveMsg(m_gameID);
-		sendto(m_socket_d, (const char *)&aliveMsg, sizeof(aliveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
+		int n = sendto(m_socket_d, (const char *)&aliveMsg, sizeof(aliveMsg), 0, (const sockaddr *) &(m_server_addr), sizeof(m_server_addr));
 		break;
 	}
 	case DEAD: {
@@ -191,7 +234,7 @@ void Client::serialize(int code)
 		break;
 	}
 	case PLAYER_MOVEMENT: {
-		int size = sizeof(int) + sizeof(int) + ((sizeof(bool) * 4) + sizeof(int));
+		int size = sizeof(int) + sizeof(int) + ((sizeof(bool) * 4));
 
 		char * data = new char[size];
 		*(int*)data = code;
@@ -238,6 +281,17 @@ void Client::deserialize(char * data, int size)
 
 	switch (msgType)
 	{
+	case PING: {
+		std::cout << "ping = " << std::to_string(m_ping) << " seconds?" << std::endl;
+		m_registerPing = true;
+		break;
+	}
+	case ALIVE:
+		break;
+	case MATCH_FULL:
+		std::cout << "Server match is full. You are waiting for a position.." << std::endl;
+		m_autoConnect = true;
+		break;
 	case NEW_PLAYER:
 		if ((*(NewPlayer*)(data)).m_playerID != m_gameID)
 		{
@@ -245,6 +299,7 @@ void Client::deserialize(char * data, int size)
 		}
 		break;
 	case CREATE_ROOM: {
+		m_autoConnect = false;
 		if (m_model == nullptr)
 		{
 			std::cout << "client - CREATE_ROOM" << std::endl;
@@ -275,12 +330,16 @@ void Client::deserialize(char * data, int size)
 		break;
 	}
 	case WORLDUPDATE: {
-
 		int elementSize = (sizeof(int)) + ((sizeof(bool) * 4));// +sizeof(std::string);
 		//size_t arraySize = (*(int*)(data + sizeof(int)));
 
 		auto list = Client::getInstance().getPlayerDetails();
+		/*if (sizeof(data) == 4)
+		{
 
+			std::cout << "data size == 4"<< std::endl;
+		}*/
+		//std::cout << "list->size() == " << std::to_string(list->size()) << std::endl;
 		for (size_t i = 0; i < list->size(); i++)
 		{
 			//std::vector<Type> v = ....;
@@ -361,9 +420,19 @@ void Client::addPlayer(NewPlayer & np)
 	newPlayer->m_playerGameID = np.m_playerID;
 	newPlayer->m_playerName = np.m_playerName;
 
-	m_serverPlayerState_mutex.lock();
-	m_playerList->push_back(newPlayer);
-	m_serverPlayerState_mutex.unlock();
+	do
+	{
+		// make sure player is accepted
+		if (m_serverPlayerState_mutex.try_lock())
+		{
+			m_playerList->push_back(newPlayer);
+			m_serverPlayerState_mutex.unlock();
+			break;
+		}
+		else
+			m_mutexBlockCounter++;
+	} while (true);
+	std::cout << "new player added, name: " << np.m_playerName << std::endl;;
 
 	// add ship to enviroment
 	Ship * s = new Ship(*m_controller, Ship::NETWORKPLAYER, np.m_playerName, np.m_playerID);
